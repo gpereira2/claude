@@ -17,6 +17,12 @@ restatements of what was asked. If you can say it in one sentence, don't use thr
 When referencing specific code, include `file_path:line_number` so the location is
 immediately navigable.
 
+- Use British English conventions (organisation, colour, optimise, etc.)
+- Use bullet points or numbered lists for readability when appropriate
+- Define specialised terms when introducing them
+- Tailor depth to the audience's assumed knowledge level
+- Use the metric system for measurements and calculations
+
 ## Principles
 
 ### Read before you touch
