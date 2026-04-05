@@ -1,0 +1,45 @@
+# Machine-specific settings (hooks, paths)
+config/settings.local.json
+
+# Memory (ephemeral, project-specific)
+config/memory/
+config/MEMORY.md
+
+# Plugin cache (downloaded content, regenerated on install)
+config/plugins/cache/
+
+# Session state
+.claude-project
+
+# OS files
+.DS_Store
+
+# Claude transient files
+config/history.jsonl
+config/debug/
+config/sessions/
+config/paste-cache/
+config/cache/
+config/statsig/
+config/telemetry/
+config/stats-cache.json
+config/policy-limits.json
+config/mcp-needs-auth-cache.json
+config/usage-data/
+config/shell-snapshots/
+config/session-env/
+config/file-history/
+config/backups/
+config/todos/
+config/tasks/
+config/plans/
+config/projects/
+config/teams/
+config/ide/
+config/icons/
+config/chrome/
+config/downloads/
+config/phpstorm/
+config/keybindings.json
+config/statusline-command.sh
+config/mcp.json
