@@ -1,0 +1,126 @@
+{
+  "version": 2,
+  "plugins": {
+    "context7@claude-plugins-official": [
+      {
+        "scope": "user",
+        "installPath": "/Users/gabrielpereira/.claude/plugins/cache/claude-plugins-official/context7/unknown",
+        "version": "unknown",
+        "installedAt": "2026-02-15T06:35:09.376Z",
+        "lastUpdated": "2026-03-25T07:58:41.119Z",
+        "gitCommitSha": "2cd88e7947b7382e045666abee790c7f55f669f3"
+      }
+    ],
+    "feature-dev@claude-plugins-official": [
+      {
+        "scope": "user",
+        "installPath": "/Users/gabrielpereira/.claude/plugins/cache/claude-plugins-official/feature-dev/unknown",
+        "version": "unknown",
+        "installedAt": "2026-02-15T06:35:29.869Z",
+        "lastUpdated": "2026-03-25T07:58:41.120Z",
+        "gitCommitSha": "2cd88e7947b7382e045666abee790c7f55f669f3"
+      }
+    ],
+    "pr-review-toolkit@claude-plugins-official": [
+      {
+        "scope": "user",
+        "installPath": "/Users/gabrielpereira/.claude/plugins/cache/claude-plugins-official/pr-review-toolkit/unknown",
+        "version": "unknown",
+        "installedAt": "2026-02-15T06:35:52.633Z",
+        "lastUpdated": "2026-03-25T07:58:41.121Z",
+        "gitCommitSha": "2cd88e7947b7382e045666abee790c7f55f669f3"
+      }
+    ],
+    "claude-md-management@claude-plugins-official": [
+      {
+        "scope": "user",
+        "installPath": "/Users/gabrielpereira/.claude/plugins/cache/claude-plugins-official/claude-md-management/1.0.0",
+        "version": "1.0.0",
+        "installedAt": "2026-02-15T06:36:11.343Z",
+        "lastUpdated": "2026-02-15T06:36:11.343Z",
+        "gitCommitSha": "2cd88e7947b7382e045666abee790c7f55f669f3"
+      }
+    ],
+    "plugin-dev@claude-plugins-official": [
+      {
+        "scope": "project",
+        "projectPath": "/Users/gabrielpereira/Projects/github/street-lens",
+        "installPath": "/Users/gabrielpereira/.claude/plugins/cache/claude-plugins-official/plugin-dev/2cd88e7947b7",
+        "version": "2cd88e7947b7",
+        "installedAt": "2026-02-15T06:36:33.512Z",
+        "lastUpdated": "2026-02-15T06:36:33.512Z",
+        "gitCommitSha": "2cd88e7947b7382e045666abee790c7f55f669f3"
+      }
+    ],
+    "superpowers@claude-plugins-official": [
+      {
+        "scope": "user",
+        "installPath": "/Users/gabrielpereira/.claude/plugins/cache/claude-plugins-official/superpowers/5.0.7",
+        "version": "5.0.7",
+        "installedAt": "2026-02-15T11:43:54.186Z",
+        "lastUpdated": "2026-03-31T19:33:46.283Z",
+        "gitCommitSha": "e16d611eee14ac4c3253b4bf4c55a98d905c2e64"
+      }
+    ],
+    "claude-code-setup@claude-plugins-official": [
+      {
+        "scope": "user",
+        "installPath": "/Users/gabrielpereira/.claude/plugins/cache/claude-plugins-official/claude-code-setup/1.0.0",
+        "version": "1.0.0",
+        "installedAt": "2026-02-15T11:43:54.192Z",
+        "lastUpdated": "2026-02-15T11:43:54.192Z",
+        "gitCommitSha": "2cd88e7947b7382e045666abee790c7f55f669f3"
+      }
+    ],
+    "learning-output-style@claude-plugins-official": [
+      {
+        "scope": "user",
+        "installPath": "/Users/gabrielpereira/.claude/plugins/cache/claude-plugins-official/learning-output-style/1.0.0",
+        "version": "1.0.0",
+        "installedAt": "2026-02-15T11:43:54.195Z",
+        "lastUpdated": "2026-03-29T13:53:11.689Z",
+        "gitCommitSha": "2cd88e7947b7382e045666abee790c7f55f669f3"
+      }
+    ],
+    "skill-creator@claude-plugins-official": [
+      {
+        "scope": "user",
+        "installPath": "/Users/gabrielpereira/.claude/plugins/cache/claude-plugins-official/skill-creator/unknown",
+        "version": "unknown",
+        "installedAt": "2026-02-23T18:11:25.429Z",
+        "lastUpdated": "2026-03-25T07:58:41.122Z",
+        "gitCommitSha": "aa296ec81e8ccb49c9784f167c2c0aa625a86cec"
+      }
+    ],
+    "security-reviewer@claude-skills": [
+      {
+        "scope": "user",
+        "installPath": "/Users/gabrielpereira/.claude/plugins/cache/claude-skills/security-reviewer/1.0.0",
+        "version": "1.0.0",
+        "installedAt": "2026-02-23T18:11:25.434Z",
+        "lastUpdated": "2026-02-23T18:11:25.434Z",
+        "gitCommitSha": "16c0e75e6f92ec4c179c9e126e2b9b9414267236"
+      }
+    ],
+    "ticket-writer@claude-skills": [
+      {
+        "scope": "user",
+        "installPath": "/Users/gabrielpereira/.claude/plugins/cache/claude-skills/ticket-writer/1.0.0",
+        "version": "1.0.0",
+        "installedAt": "2026-02-23T18:11:25.970Z",
+        "lastUpdated": "2026-02-23T18:11:25.970Z",
+        "gitCommitSha": "16c0e75e6f92ec4c179c9e126e2b9b9414267236"
+      }
+    ],
+    "phpstorm-plugin@phpstorm-marketplace": [
+      {
+        "scope": "user",
+        "installPath": "/Users/gabrielpereira/.claude/plugins/cache/phpstorm-marketplace/phpstorm-plugin/1.0.0",
+        "version": "1.0.0",
+        "installedAt": "2026-03-26T17:29:01.948Z",
+        "lastUpdated": "2026-03-26T17:29:01.948Z",
+        "gitCommitSha": "16b213985078afa1095fdaf65f7b750ce4965ff6"
+      }
+    ]
+  }
+}
