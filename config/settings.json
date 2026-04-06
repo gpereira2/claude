@@ -1,1 +1,14 @@
-{}
+{
+  "statusLine": {
+    "type": "command",
+    "command": "bash /Users/gabrielpereira/.claude/statusline-command.sh"
+  },
+  "hooks": {
+    "PreToolUse": [
+      {
+        "matcher": "Read|Edit|Write",
+        "hook": "bash -c 'input=$(cat); file=$(echo \"$input\" | jq -r \".tool_input.file_path // .tool_input.path // empty\"); if echo \"$file\" | grep -qE \"(^|/)\\.env($|\\.)\" && ! echo \"$file\" | grep -qE \"\\.env\\.example$\"; then echo \"{\\\"decision\\\": \\\"block\\\", \\\"reason\\\": \\\"Access to .env files is blocked to protect secrets.\\\"}\"; else echo \"{\\\"decision\\\": \\\"approve\\\"}\"; fi'"
+      }
+    ]
+  }
+}
