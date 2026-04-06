@@ -1,1 +1,62 @@
-{}
+{
+  "env": {
+    "CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS": "1"
+  },
+  "permissions": {
+    "allow": [],
+    "deny": [
+      "Bash(rm -rf *)",
+      "Bash(rm -rf /)",
+      "Bash(rm -rf ~)",
+      "Bash(rm -rf .)",
+      "Bash(git push --force*)",
+      "Bash(git push * --force*)",
+      "Bash(git reset --hard*)",
+      "Bash(git clean -fd*)",
+      "Bash(git checkout -- .)",
+      "Bash(git restore .)",
+      "Bash(git branch -D main)",
+      "Bash(git branch -D master)",
+      "Bash(chmod 777*)",
+      "Bash(curl * | bash*)",
+      "Bash(curl * | sh*)",
+      "Bash(wget * | bash*)",
+      "Bash(wget * | sh*)",
+      "Bash(npm publish*)",
+      "Bash(npx * publish*)",
+      "Bash(docker rm -f*)",
+      "Bash(docker system prune*)",
+      "Bash(kill -9 1)",
+      "Bash(killall *)",
+      "Bash(> /dev/sda*)",
+      "Bash(dd if=*of=/dev/*)",
+      "Bash(mkfs.*)",
+      "Bash(:(){ :|:& };:)",
+      "Bash(ssh * rm *)",
+      "Bash(DROP TABLE*)",
+      "Bash(DROP DATABASE*)",
+      "Bash(truncate *)"
+    ],
+    "defaultMode": "default"
+  },
+  "hooks": {
+    "PreToolUse": [
+      {
+        "matcher": "Read|Edit|Write",
+        "hook": "bash -c 'input=$(cat); file=$(echo \"$input\" | jq -r \".tool_input.file_path // .tool_input.path // empty\"); if echo \"$file\" | grep -qE \"(^|/)\\.env($|\\.)\" && ! echo \"$file\" | grep -qE \"\\.env\\.example$\"; then echo \"{\\\"decision\\\": \\\"block\\\", \\\"reason\\\": \\\"Access to .env files is blocked to protect secrets.\\\"}\"; else echo \"{\\\"decision\\\": \\\"approve\\\"}\"; fi'"
+      },
+      {
+        "matcher": "Bash",
+        "hook": "bash -c 'input=$(cat); cmd=$(echo \"$input\" | jq -r \".tool_input.command // empty\"); if echo \"$cmd\" | grep -qE \"\\.(env)($|\\.)\" && ! echo \"$cmd\" | grep -qE \"\\.env\\.example\"; then echo \"{\\\"decision\\\": \\\"block\\\", \\\"reason\\\": \\\"Bash access to .env files is blocked to protect secrets.\\\"}\"; else echo \"{\\\"decision\\\": \\\"approve\\\"}\"; fi'"
+      }
+    ],
+    "Stop": [],
+    "PreCompact": [],
+    "TaskCompleted": [],
+    "Notification": []
+  },
+  "statusLine": {
+    "type": "command",
+    "command": "bash /Users/gabrielpereira/.claude/statusline-command.sh"
+  }
+}

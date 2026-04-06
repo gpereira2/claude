@@ -40,6 +40,5 @@ config/icons/
 config/chrome/
 config/downloads/
 config/phpstorm/
-config/keybindings.json
-config/statusline-command.sh
-config/mcp.json
+# OpenCode transient files
+config/opencode/plugins/node_modules/

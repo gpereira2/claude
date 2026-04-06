@@ -1,3 +1,20 @@
 {
-  "mcpServers": {}
+  "mcpServers": {
+    "docker": {
+      "command": "docker",
+      "args": ["mcp", "gateway", "run"]
+    },
+    "phpstorm": {
+      "type": "http",
+      "url": "http://127.0.0.1:64342/sse"
+    },
+    "context7": {
+      "type": "http",
+      "url": "https://mcp.context7.com/mcp"
+    },
+    "chrome_devtools": {
+      "command": "npx",
+      "args": ["chrome-devtools-mcp@latest"]
+    }
+  }
 }

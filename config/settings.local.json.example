@@ -1,0 +1,14 @@
+{
+  "_comment": "Machine-specific overrides. Copy to settings.local.json and adjust.",
+  "voiceEnabled": true,
+  "teammateMode": "tmux",
+  "syntaxHighlightingDisabled": false,
+  "effortLevel": "low",
+  "autoUpdatesChannel": "latest",
+  "mcpServers": {
+    "serena": {
+      "type": "http",
+      "url": "http://localhost:8090/mcp"
+    }
+  }
+}
