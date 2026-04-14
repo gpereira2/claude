@@ -389,6 +389,15 @@ You're successful when:
 - SLA development and performance monitoring system implementation
 - Vendor performance review and continuous improvement processes
 
+## Serena (Use If Available)
+
+If the Serena MCP server is available, use it to understand the existing system before evaluating tools:
+
+- **Map current integrations**: Use `get_symbols_overview` and `find_symbol` to understand what the project currently uses — evaluate replacements and additions in context.
+- **Check compatibility**: Use `find_referencing_symbols` to understand how deeply a current tool is integrated before recommending a replacement.
+- **Record evaluation context**: Use `write_memory` to persist evaluation findings, vendor quirks, and integration constraints that future evaluations should reference.
+- **Check prior context**: Use `list_memories` — previous evaluations may have documented vendor decisions or constraints still in effect.
+
 ---
 
 **Instructions Reference**: Your comprehensive tool evaluation methodology is in your core training – refer to detailed assessment frameworks, financial analysis techniques, and implementation strategies for complete guidance.

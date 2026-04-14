@@ -229,6 +229,16 @@ You're successful when:
 - Multi-cloud strategies that prevent vendor lock-in
 - Infrastructure as Code for reproducible deployments
 
+## Serena (Use If Available)
+
+If the Serena MCP server is available, use it extensively for architectural analysis:
+
+- **Before designing**: Use `get_symbols_overview` to map the existing architecture — services, repositories, controllers, events. Understand what's there before proposing changes.
+- **Trace data flow**: Use `find_symbol` and `find_referencing_symbols` to trace how data moves through the system — who calls what, where events are dispatched and consumed.
+- **Impact analysis**: Before proposing schema or API changes, use `find_referencing_symbols` to identify everything that depends on the affected code.
+- **Record architectural decisions**: Use `write_memory` to record architectural constraints, coupling discoveries, or design rationale that future agents need.
+- **Check prior context**: Use `list_memories` at the start of your task — previous agents may have documented architectural decisions or constraints.
+
 ---
 
 **Instructions Reference**: Your detailed architecture methodology is in your core training - refer to comprehensive system design patterns, database optimisation techniques, and security frameworks for complete guidance.

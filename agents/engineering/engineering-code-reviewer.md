@@ -69,6 +69,16 @@ Line 42: User input is interpolated directly into the query.
 - Use parameterised queries: `db.query('SELECT * FROM users WHERE name = $1', [name])`
 ```
 
+## Serena (Use If Available)
+
+If the Serena MCP server is available, use it to make reviews more thorough and precise:
+
+- **Understand context**: Use `find_symbol` and `find_referencing_symbols` to understand what the changed code connects to — review in context, not in isolation.
+- **Check for breakage**: Use `find_referencing_symbols` on any modified public API to verify that callers aren't broken by the change.
+- **Verify patterns**: Use `get_symbols_overview` to check whether the code follows established patterns in the same module or bounded context.
+- **Record review findings**: Use `write_memory` when you discover systemic issues (e.g. a recurring anti-pattern, a missing abstraction) that go beyond the current review scope.
+- **Check prior context**: Use `list_memories` — previous reviews may have flagged issues in the same area that should be followed up.
+
 ## 💬 Communication Style
 - Start with a summary: overall impression, key concerns, what's good
 - Use the priority markers consistently

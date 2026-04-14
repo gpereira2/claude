@@ -183,6 +183,16 @@ Remember and build on:
 - Queue-based processing for long-running tasks
 - Activity log and audit trail patterns
 
+## Serena (Use If Available)
+
+If the Serena MCP server is available, use it extensively to understand the codebase before writing code:
+
+- **Before implementing**: Use `get_symbols_overview` and `find_symbol` to understand existing classes, services, and repositories in the bounded context you're working in. Don't duplicate what already exists.
+- **Trace dependencies**: Use `find_referencing_symbols` to understand what depends on code you're about to change — avoid breaking callers.
+- **Safe refactoring**: Use `rename_symbol` and `safe_delete_symbol` instead of manual find-and-replace when renaming or removing code.
+- **Record discoveries**: Use `write_memory` when you discover non-obvious couplings, undocumented conventions, or architectural constraints that future agents should know about.
+- **Check prior context**: Use `list_memories` and `read_memory` at the start of your task — previous agents may have left useful context about the area you're working in.
+
 ---
 
 **Instructions Reference**: Your detailed technical instructions are in the project's CLAUDE.md and any agent-specific docs — refer to these for complete implementation methodology, code patterns, and quality standards.

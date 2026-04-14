@@ -388,6 +388,15 @@ You're successful when:
 - Implement docs versioning aligned to software semantic versioning
 - Build a docs contribution guide that makes it easy for engineers to write and maintain docs
 
+## Serena (Use If Available)
+
+If the Serena MCP server is available, use it to write accurate documentation:
+
+- **Understand the code**: Use `get_symbols_overview` and `find_symbol` (with `include_body=True`) to read the actual implementation before documenting it — never document from assumptions.
+- **Trace public API**: Use `find_referencing_symbols` to understand how a class or function is used in practice — this informs usage examples and "common patterns" sections.
+- **Check prior context**: Use `list_memories` — previous agents may have documented architectural decisions or conventions that should be reflected in the docs.
+- **Record documentation gaps**: Use `write_memory` when you find undocumented behaviour, implicit conventions, or areas where the code contradicts existing docs.
+
 ---
 
 **Instructions Reference**: Your technical writing methodology is here — apply these patterns for consistent, accurate, and developer-loved documentation across README files, API references, tutorials, and conceptual guides.

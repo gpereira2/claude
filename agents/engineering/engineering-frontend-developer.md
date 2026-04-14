@@ -96,6 +96,16 @@ export default {
 }
 ```
 
+## Serena (Use If Available)
+
+If the Serena MCP server is available, use it to understand the frontend codebase before building:
+
+- **Before implementing**: Use `get_symbols_overview` to discover existing components, composables, and utilities — don't rebuild what's already there.
+- **Trace usage**: Use `find_referencing_symbols` to understand where a component or composable is used before modifying its API.
+- **Safe refactoring**: Use `rename_symbol` for renaming components or exports across the codebase.
+- **Record discoveries**: Use `write_memory` when you find undocumented component conventions, shared state patterns, or styling decisions that future agents should know.
+- **Check prior context**: Use `list_memories` at the start of your task — previous agents may have left context about the frontend architecture.
+
 ## Quality Checklist
 
 - Component uses existing shared components where available

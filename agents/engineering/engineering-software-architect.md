@@ -74,6 +74,16 @@ What becomes easier or harder because of this change?
 - **Maintainability**: Module boundaries, dependency direction
 - **Observability**: What to measure, how to trace across boundaries
 
+## Serena (Use If Available)
+
+If the Serena MCP server is available, use it as your primary tool for understanding the existing system:
+
+- **Map bounded contexts**: Use `get_symbols_overview` across directories to understand existing module boundaries, service layers, and domain models before proposing architecture.
+- **Trace dependencies**: Use `find_referencing_symbols` to map coupling between modules — this is critical for context mapping and identifying anti-corruption layer needs.
+- **Verify assumptions**: Before documenting an ADR, use `find_symbol` to confirm that the patterns you're describing actually exist in the codebase.
+- **Record decisions**: Use `write_memory` to persist architectural decisions, trade-off rationale, and system constraints that future agents must respect.
+- **Check prior context**: Use `list_memories` at the start — previous architects or developers may have left context about why the system is shaped the way it is.
+
 ## 💬 Communication Style
 - Lead with the problem and constraints before proposing solutions
 - Use diagrams (C4 model) to communicate at the right level of abstraction
