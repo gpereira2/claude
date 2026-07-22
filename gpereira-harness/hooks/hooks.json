@@ -1,3 +1,57 @@
 {
-  "hooks": {}
+  "hooks": {
+    "PreToolUse": [
+      {
+        "matcher": "Task",
+        "hooks": [
+          { "type": "command", "command": "bash \"${CLAUDE_PLUGIN_ROOT}\"/hooks/agent-dispatch-conduct-gate.sh" }
+        ]
+      },
+      {
+        "matcher": "Bash",
+        "hooks": [
+          { "type": "command", "command": "python3 \"${CLAUDE_PLUGIN_ROOT}\"/hooks/bash-clause-guard.py" }
+        ]
+      },
+      {
+        "matcher": "Write|Edit",
+        "hooks": [
+          { "type": "command", "command": "python3 \"${CLAUDE_PLUGIN_ROOT}\"/hooks/secret-scan-guard.py" }
+        ]
+      }
+    ],
+    "SubagentStart": [
+      {
+        "matcher": "",
+        "hooks": [
+          { "type": "command", "command": "bash \"${CLAUDE_PLUGIN_ROOT}\"/hooks/subagent-trace.sh" }
+        ]
+      }
+    ],
+    "SubagentStop": [
+      {
+        "matcher": "",
+        "hooks": [
+          { "type": "command", "command": "bash \"${CLAUDE_PLUGIN_ROOT}\"/hooks/subagent-contract-gate.sh" },
+          { "type": "command", "command": "bash \"${CLAUDE_PLUGIN_ROOT}\"/hooks/subagent-trace.sh" }
+        ]
+      }
+    ],
+    "PreCompact": [
+      {
+        "matcher": "",
+        "hooks": [
+          { "type": "command", "command": "bash \"${CLAUDE_PLUGIN_ROOT}\"/hooks/precompact-handoff.sh" }
+        ]
+      }
+    ],
+    "SessionStart": [
+      {
+        "matcher": "resume|compact",
+        "hooks": [
+          { "type": "command", "command": "bash \"${CLAUDE_PLUGIN_ROOT}\"/hooks/sessionstart-handoff.sh" }
+        ]
+      }
+    ]
+  }
 }
