@@ -1,0 +1,11 @@
+{
+  "name": "gpereira-harness-marketplace",
+  "owner": { "name": "gpereira2" },
+  "plugins": [
+    {
+      "name": "gpereira-harness",
+      "source": "./gpereira-harness",
+      "description": "Portable Claude Code harness: orchestrator + agent-selector skills, four worker agents, four-tier model routing (API-with-fallback), and an Obsidian-compatible context store. No MCP registrations bundled by design."
+    }
+  ]
+}

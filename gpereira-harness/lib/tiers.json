@@ -1,0 +1,9 @@
+{
+  "_comment": "Tiers map to FAMILY regex patterns, not dated IDs. resolve-models.sh picks the newest live model whose ID matches the pattern; if the API is unreachable (or the key can't see that family) it uses the pinned fallback. Edit patterns/fallbacks freely — this is the single source of truth for routing. FRONTIER targets the Fable family but falls back to Opus, so keys without Fable access still resolve to a working model rather than empty. Fallbacks are illustrative; update to whatever you consider stable.",
+  "tiers": {
+    "FAST":     { "pattern": "^claude-haiku",  "fallback": "claude-haiku-4-5-20251001" },
+    "STANDARD": { "pattern": "^claude-sonnet", "fallback": "claude-sonnet-5" },
+    "DEEP":     { "pattern": "^claude-opus",   "fallback": "claude-opus-4-8" },
+    "FRONTIER": { "pattern": "^claude-fable",  "fallback": "claude-opus-4-8" }
+  }
+}

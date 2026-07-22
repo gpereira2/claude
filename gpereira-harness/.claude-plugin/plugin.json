@@ -1,0 +1,9 @@
+{
+  "name": "gpereira-harness",
+  "version": "1.0.0",
+  "description": "Portable Claude Code harness: orchestrator + agent-selector skills, four named worker agents, four-tier model routing (API-with-fallback), and an Obsidian-compatible context store. No MCP registrations bundled by design.",
+  "author": {
+    "name": "gpereira2"
+  },
+  "license": "MIT"
+}

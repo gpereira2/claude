@@ -1,0 +1,10 @@
+# Never commit context state — per-user, may contain ticket content
+context/
+**/context/
+
+# Personal routing overrides (delete this line if you want to share tiers)
+lib/tiers.local.json
+
+# OS / editor cruft
+.DS_Store
+*.swp

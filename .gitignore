@@ -42,3 +42,6 @@ config/downloads/
 config/phpstorm/
 # OpenCode transient files
 config/opencode/plugins/node_modules/
+
+# Downloaded build artifact — not tracked
+files.zip
