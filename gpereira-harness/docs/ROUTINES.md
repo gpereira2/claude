@@ -19,6 +19,7 @@ runs until you schedule it.
 | Routine | What it does | Depends on |
 |---|---|---|
 | `weekly-skill-observation-review` | Runs the `task-observer` weekly review — consolidates OPEN skill observations into skill updates | the bundled `task-observer` skill |
+| `worktree-status` | Read-only git worktree hygiene report — active worktrees, merged/closed-PR reap candidates, prunable/orphaned branches | `git`, `gh` (no Docker) |
 
 Machine- or workspace-specific routines (control-board checks, regression sweeps,
 Docker/worktree pruning, anything that DMs a chat workspace) are intentionally

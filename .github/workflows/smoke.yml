@@ -1,0 +1,20 @@
+name: plugin smoke
+
+on:
+  push:
+    paths:
+      - "gpereira-harness/**"
+      - ".github/workflows/smoke.yml"
+  pull_request:
+    paths:
+      - "gpereira-harness/**"
+
+jobs:
+  smoke:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Ensure jq
+        run: command -v jq >/dev/null || (sudo apt-get update && sudo apt-get install -y jq)
+      - name: Smoke test + leak gate
+        run: bash gpereira-harness/test/smoke.sh

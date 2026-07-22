@@ -30,6 +30,7 @@ jq -e . "$ROOT/hooks/hooks.json" >/dev/null || fail "hooks.json invalid"
 # 5. every hook referenced by hooks.json exists and is executable
 for f in agent-dispatch-conduct-gate.sh subagent-contract-gate.sh subagent-trace.sh \
          subagent-trace-summary.sh precompact-handoff.sh sessionstart-handoff.sh \
+         storage-root-hint.sh plan-persist-context.sh docs-location-guard.sh \
          secret-scan-guard.py bash-clause-guard.py; do
   [ -f "$ROOT/hooks/$f" ] || fail "missing hook: $f"
   [ -x "$ROOT/hooks/$f" ] || fail "hook not executable: $f"
@@ -50,14 +51,14 @@ echo '{"tool_input":{"command":"ls -la"}}' | python3 "$ROOT/hooks/bash-clause-gu
 #    references the public Anthropic Models API.
 INTERNAL='street|agentsoftware|spectre\.atlassian|network_id|LettingsManagement|SalesAndLettings|storage/claude'
 if grep -rInE "$INTERNAL" \
-     "$ROOT/skills" "$ROOT/agents" "$ROOT/hooks" "$ROOT/routines" "$ROOT/docs" \
+     "$ROOT/skills" "$ROOT/agents" "$ROOT/hooks" "$ROOT/routines" "$ROOT/commands" "$ROOT/docs" \
      "$ROOT/README.md" "$ROOT/.claude-plugin" 2>/dev/null; then
   fail "internal reference(s) found above — sanitise before publishing"
 fi
 
 # 9. no absolute home paths baked into shareable files
 if grep -rInE '/Users/[a-z]+/|/home/[a-z]+/' \
-     "$ROOT/skills" "$ROOT/agents" "$ROOT/hooks" "$ROOT/routines" "$ROOT/docs" 2>/dev/null; then
+     "$ROOT/skills" "$ROOT/agents" "$ROOT/hooks" "$ROOT/routines" "$ROOT/commands" "$ROOT/docs" 2>/dev/null; then
   fail "absolute home path(s) found above — use \$HOME / \${CLAUDE_PLUGIN_ROOT} / vault"
 fi
 
