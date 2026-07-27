@@ -26,6 +26,7 @@ Open a draft pull request for the current local branch.
 2. `git status --porcelain` → if dirty, show `git diff --stat`, propose a one-line commit message (what changed, ticket included; no reasoning — that belongs in the body), and wait for a go before committing.
 3. `git status -sb` → check sync with `origin/<branch>`. Ahead / no upstream → offer to push (`git push -u origin <branch>` when no upstream); wait for the go. Behind → tell the user to pull/rebase; abort. `[gone]` → abort ("branch was merged and its remote is gone; start a new branch off the base").
 4. `gh pr view --json url,state 2>/dev/null` → no PR → create mode. Open PR → update mode (run the commit/push gates, then offer to regenerate title/body via `gh pr edit`; never flip draft/ready unless asked). Merged/closed → print URL + state and stop.
+   - After any `gh pr edit`, re-verify the draft flag: `gh api repos/{owner}/{repo}/pulls/{n} --jq '.draft'`. `gh pr edit` has been observed to silently flip a draft PR to ready — if it did, restore it with `gh pr ready {n} --undo`.
 
 ## Step 2 — Extract the ticket
 

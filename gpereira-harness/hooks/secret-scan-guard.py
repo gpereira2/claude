@@ -2,11 +2,22 @@
 """PreToolUse(Write|Edit) secret scanner.
 
 Scans outgoing content (Write.content / Edit.new_string) for credential
-patterns before they land on disk. Verdict is "ask" (not deny) because test
-fixtures legitimately contain fake credentials — the user confirms or rejects
-with the finding named. Silent exit when clean.
+patterns before they land on disk. Silent exit when clean.
+
+Verdict defaults to "deny", deliberately. An earlier version returned "ask" on
+the theory that the user would confirm fixtures containing fake credentials —
+but "ask" is not a reliable control: a session running with auto-approval
+(permission mode `auto` / a skip-prompt setting) resolves it to approve with no
+prompt shown, so the guard passes silently and the installer believes they are
+covered when they are not. Verified 2026-07-24: a Write containing a clean
+match for the AWS pattern below completed with no prompt and no block.
+
+Set SECRET_SCAN_GUARD_MODE=ask to restore the soft posture if your workflow
+writes fixtures with fake key material often enough that denial is the wrong
+default — but understand it may be a no-op in your session.
 """
 import json
+import os
 import re
 import sys
 
@@ -44,14 +55,19 @@ def main():
     if not findings:
         return 0
     fp = ti.get("file_path") or "content"
-    print(json.dumps({"hookSpecificOutput": {
-        "hookEventName": "PreToolUse",
-        "permissionDecision": "ask",
-        "permissionDecisionReason": (
-            f"Potential secrets in {fp}: " + "; ".join(findings)
-            + ". Confirm only if these are fake/test values."
-        ),
-    }}))
+    reason = (
+        f"Potential secrets in {fp}: " + "; ".join(findings)
+        + ". Write them outside the guarded tools, or set "
+          "SECRET_SCAN_GUARD_MODE=ask if these are fixtures."
+    )
+    if os.environ.get("SECRET_SCAN_GUARD_MODE") == "ask":
+        print(json.dumps({"hookSpecificOutput": {
+            "hookEventName": "PreToolUse",
+            "permissionDecision": "ask",
+            "permissionDecisionReason": reason,
+        }}))
+    else:
+        print(json.dumps({"decision": "block", "reason": reason}))
     return 0
 
 

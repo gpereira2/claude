@@ -40,13 +40,17 @@ routing; optional).
 |------|---------|
 | `skills/orchestrator/` | Pure-coordinator pipeline conductor; persists state to the context vault, never the repo |
 | `skills/agent-selector/` | Plan → tiered task manifest → parallel worker subagents |
+| `skills/agent-selector/references/worker-conduct.md` | The canonical conduct block, embedded verbatim in every dispatch — single source for the skill, the orchestrator's delegation contract, and `/review-queue` |
+| `skills/agent-selector/references/disagreement-panel.md` | N-judge adversarial adjudication for decisions that are complex *and* contested; the generalisation of dual-inference |
 | `skills/task-observer/` | Continuous skill-improvement registry (observation log + weekly review). Third-party, CC BY 4.0 — see below |
 | `agents/*.md` | `discovery`, `implementer`, `test-writer`, `reviewer` — least-privilege tool allowlists |
 | `hooks/` | Enforcement, safety, and observability hooks wired via `hooks/hooks.json` (see below) |
 | `lib/resolve-models.sh` | Hybrid tier→model resolver: live Anthropic Models API, falls back to `tiers.json` offline |
-| `lib/tiers.json` | FAST / STANDARD / DEEP / FRONTIER → family regex patterns + pinned fallbacks |
+| `lib/tiers.json` | LIGHT / STANDARD / DEEP / FRONTIER → family regex patterns + pinned fallbacks |
 | `lib/context-store.sh` | Resolves `$CLAUDE_CONTEXT_DIR` (default `~/.claude/context`); inits an Obsidian vault |
+| `commands/` | `/create-pr` (draft PR in a fixed format), `/review-queue` (parallel review of PRs awaiting you; never posts unprompted) |
 | `routines/` | Scheduled-task templates (not auto-loaded) — see [`docs/ROUTINES.md`](docs/ROUTINES.md) |
+| `docs/PRINCIPLES.md` | Cross-cutting principles, each extracted from an observed failure — the checklist for writing or reviewing a skill |
 | `docs/` | MCP suggestions, routine registration, and a `CLAUDE.md` example (template only) |
 | `test/smoke.sh` | Sanity checks + a leak gate (internal-reference / secret / absolute-path scan) |
 
@@ -65,12 +69,38 @@ Plugin-scoped and endpoint-free — they wire into your session via
 | `subagent-trace.sh` | SubagentStart/Stop | Appends a JSONL audit trace of every subagent to the vault |
 | `subagent-trace-summary.sh` | (CLI helper) | Renders a markdown summary table from a trace file |
 | `bash-clause-guard.py` | PreToolUse(Bash) | Deny-only guard: decomposes compound commands, blocks catastrophic clauses |
-| `secret-scan-guard.py` | PreToolUse(Write\|Edit) | Asks before writing content that looks like real credentials |
+| `secret-scan-guard.py` | PreToolUse(Write\|Edit) | **Blocks** writing content that looks like real credentials. Set `SECRET_SCAN_GUARD_MODE=ask` for the soft posture — but see the note below before relying on it |
+| `credential-file-guard.py` | PreToolUse(Read\|Edit\|Write\|Grep\|Glob\|NotebookEdit\|Bash) | Hard-blocks reads of `auth.json`, `.env*` (bar `.example`/`.sample`/`.template`/`.dist`), `.npmrc`, `netrc`, and `*.pem`, on both file-path and shell-command inputs |
+| `pr-context-hint.sh` | SessionStart | Injects the current branch's PR state — number, draft, CI rollup, review decision, mergeability — via read-only `gh`. Skips default branches; fails open |
+| `context-status.sh` | statusline filter | Writes raw per-session context data for an external dashboard and passes stdin through. Not wired by `hooks.json` — pipe it before your statusline command |
 | `precompact-handoff.sh` | PreCompact | Snapshots in-flight session state before compaction |
 | `sessionstart-handoff.sh` | SessionStart(resume\|compact) | Re-injects the pre-compaction snapshot on resume |
 | `storage-root-hint.sh` | SessionStart / SubagentStart | Injects the vault (`$CLAUDE_CONTEXT_DIR`) as the canonical doc/state root, keeping generated files out of the repo |
 | `plan-persist-context.sh` | PostToolUse(ExitPlanMode) | Nudges the approved plan into the vault (`tickets/<TICKET>/plan.md` or `plans/<date>-slug.md`) |
 | `docs-location-guard.sh` | PreToolUse(Write) | **Opt-in** (`CLAUDE_HARNESS_DOCS_GUARD=1`): redirects new generated `.md` from the repo to the vault; off by default so it never fights real repo docs |
+
+### Two things to know before trusting a guard
+
+**An "ask" verdict may be inert.** A session running with auto-approval
+(permission mode `auto`, or a skip-prompt setting) resolves `permissionDecision:
+"ask"` to approve with no prompt shown. A guard built on "ask" then blocks
+nothing while appearing installed. Verified in one such environment: a write
+containing a clean match for the AWS-key pattern completed with no prompt and no
+block. That is why `secret-scan-guard.py` now defaults to a hard block and
+`credential-file-guard.py` only ever emits `{"decision": "block"}`.
+
+**A guard must never emit an explicit *approve*.** Approving the inputs it does
+not care about does not merely pass the call — it short-circuits the permission
+check that would otherwise have prompted. With a broad matcher (this one spans
+`Bash`), a single narrow guard would silently auto-approve every unrelated
+command in its scope. These hooks block, or exit silently. Nothing else.
+
+**Matcher coverage is not obvious.** `Grep` prints file content but is *not*
+matched by `Read|Edit|Write` — a credential guard wired only to those three
+leaves an open channel. `credential-file-guard.py` therefore matches the full
+set of content-returning tools. Its `*.pem` rule is deliberately path-only:
+matching `.pem` inside shell commands also caught legitimate local-TLS
+certificate tooling, for no security gain, since the vector is *reading* a key.
 
 The two gate hooks make the harness self-enforcing: the conduct/contract rules in
 `orchestrator` + `agent-selector` are checked by hooks, not left to good
@@ -88,10 +118,36 @@ pinned `fallback` in `tiers.json`.
 
 | Tier | Family | Notes |
 |------|--------|-------|
-| FAST | `^claude-haiku` | cheapest; mechanical work |
+| LIGHT | `^claude-haiku` | cheapest; mechanical work |
 | STANDARD | `^claude-sonnet` | implementation, tests, research |
 | DEEP | `^claude-opus` | architecture, ambiguous specs, review |
-| FRONTIER | `^claude-fable` | long-horizon/self-verifying work |
+| FRONTIER | `^claude-fable` | long-horizon work; DEEP has already failed |
+
+### Effort is a second, independent dial
+
+Tier picks **which model**; `effort` picks **how hard it thinks**. They are
+orthogonal and are routed in separate passes — there is no one-to-one mapping,
+and the useful manifests are usually off the diagonal:
+
+| Pairing | Use |
+|---|---|
+| DEEP + `medium` | Code review — accuracy holds at lower effort, so a capable reviewer is cheap enough to gate every group |
+| LIGHT + `medium` | Wide mechanical sweep with many small judgement calls |
+| DEEP + `xhigh` | Architecture, security boundaries, irreversible migrations |
+| STANDARD + `low` | Bulk edits from a settled pattern |
+
+Both dials must be **pinned explicitly on every dispatch**. Omitted, each falls
+back to session inheritance and silently discards the manifest's routing — the
+run does not error, it just costs the wrong amount. The failure escalation
+cascade climbs effort *before* tier, since most failures are under-thought
+rather than under-powered.
+
+> **No self-verification instructions.** Current models verify their own work
+> and catch their own mistakes unprompted, so "double-check your answer" or
+> "refute your own result" steps compound with native behaviour and spend
+> tokens for nothing. The harness deliberately contains none. Real verification
+> still belongs in a dispatch, but as *tool execution* — the contract's test and
+> lint commands, and project checklists encoding knowledge a model cannot infer.
 
 > **FRONTIER → Fable.** FRONTIER targets the Fable family, which is
 > permission-gated and absent from most API keys. Its fallback is Opus, so on a
@@ -100,7 +156,7 @@ pinned `fallback` in `tiers.json`.
 > `tiers.json`.
 
 ```bash
-"${CLAUDE_PLUGIN_ROOT}/lib/resolve-models.sh"          # {"FAST":...,"STANDARD":...,"DEEP":...,"FRONTIER":...}
+"${CLAUDE_PLUGIN_ROOT}/lib/resolve-models.sh"          # {"LIGHT":...,"STANDARD":...,"DEEP":...,"FRONTIER":...}
 "${CLAUDE_PLUGIN_ROOT}/lib/resolve-models.sh" DEEP     # single tier
 ```
 

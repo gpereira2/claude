@@ -2,6 +2,10 @@
 # PostToolUse(ExitPlanMode) hook: after a plan is approved, prompt Claude to
 # persist the plan and its decisions to the context vault before implementing.
 # Vault-resolved via context-store.sh ($CLAUDE_CONTEXT_DIR). Fail-open.
+#
+# Honours CLAUDE_HARNESS_VAULT_HINTS=0 (see storage-root-hint.sh) — an installer
+# that persists plans somewhere project-specific needs one destination, not two.
+[ "${CLAUDE_HARNESS_VAULT_HINTS:-1}" = "0" ] && exit 0
 
 input=$(cat)
 

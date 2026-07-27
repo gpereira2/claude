@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# resolve-models.sh — map FAST/STANDARD/DEEP/FRONTIER tiers to concrete model IDs.
+# resolve-models.sh — map LIGHT/STANDARD/DEEP/FRONTIER tiers to concrete model IDs.
 #
 # Strategy (hybrid):
 #   1. Try the Anthropic Models API and pick the NEWEST model per tier by
@@ -13,7 +13,7 @@
 #
 # Usage:
 #   resolve-models.sh              # print all tiers as JSON
-#   resolve-models.sh FAST         # print one tier's resolved model ID
+#   resolve-models.sh LIGHT         # print one tier's resolved model ID
 #
 # Env:
 #   ANTHROPIC_API_KEY   optional; enables live resolution
@@ -59,7 +59,7 @@ resolve_tier() {
   printf '%s' "$fallback"
 }
 
-TIERS=(FAST STANDARD DEEP FRONTIER)
+TIERS=(LIGHT STANDARD DEEP FRONTIER)
 
 if [ "$#" -ge 1 ]; then
   resolve_tier "$1"

@@ -26,10 +26,17 @@ State lives in the **context vault** (see below), never in the project repo.
 The harness persists all pipeline state to a per-user Obsidian-compatible vault, resolved by the bundled lib. Do this once at the start of a run:
 
 ```bash
-CTX="$("${CLAUDE_PLUGIN_ROOT}/lib/context-store.sh" path)"     # resolved vault dir
-"${CLAUDE_PLUGIN_ROOT}/lib/context-store.sh" init >/dev/null   # ensure vault exists
-TDIR="$("${CLAUDE_PLUGIN_ROOT}/lib/context-store.sh" ticket-dir "$TICKET")"
+STORE="${CLAUDE_PLUGIN_ROOT:-}/lib/context-store.sh"
+if [ -x "$STORE" ]; then
+    CTX="$("$STORE" path)"; "$STORE" init >/dev/null
+    TDIR="$("$STORE" ticket-dir "$TICKET")"
+else                                                            # raw checkout: no CLAUDE_PLUGIN_ROOT
+    CTX="${CLAUDE_CONTEXT_DIR:-$HOME/.claude/context}"
+    TDIR="$CTX/tickets/$TICKET"; mkdir -p "$TDIR"
+fi
 ```
+
+`CLAUDE_PLUGIN_ROOT` is only set when the harness is loaded as an installed plugin. From a raw checkout it is empty, so an unguarded `"${CLAUDE_PLUGIN_ROOT}/lib/context-store.sh"` expands to `/lib/context-store.sh` and fails with "not found" — the same fail-open guard the hooks use is required here.
 
 Write `ticket.md` (Obsidian frontmatter + embedded JSON, per `lib/templates/ticket.md.tmpl`) and `plan.md` into `$TDIR`. Cross-ticket pipeline state goes in `$CTX/_run.json`. **Never** write pipeline state into the project repo — it is per-user and must not be committed.
 
@@ -38,7 +45,7 @@ Write `ticket.md` (Obsidian frontmatter + embedded JSON, per `lib/templates/tick
 ## Model routing — resolve tiers at runtime, never hardcode IDs
 
 ```bash
-MODELS="$("${CLAUDE_PLUGIN_ROOT}/lib/resolve-models.sh")"   # {"FAST":...,"STANDARD":...,"DEEP":...,"FRONTIER":...}
+MODELS="$("${CLAUDE_PLUGIN_ROOT}/lib/resolve-models.sh")"   # {"LIGHT":...,"STANDARD":...,"DEEP":...,"FRONTIER":...}
 DEEP="$("${CLAUDE_PLUGIN_ROOT}/lib/resolve-models.sh" DEEP)"
 ```
 
@@ -50,7 +57,9 @@ Tiers map to model **families** (regex patterns in `lib/tiers.json`), resolved t
 
 Accept: a single ticket (`PROJECT-1234`, a URL, "work on 1234"), a ticket list, a free-form description, or a pre-written plan. If an issue-tracker MCP is configured, fetch ticket detail through it; otherwise take the description as given. Normalise refs to a consistent `PROJECT-NUMBER` form. For free-form/doc input, present the extracted work units for confirmation.
 
-Then **select a mode** — this is what makes the pipeline flexible. Effort scales to the work, exactly as agent-selector scales models to tasks:
+Then **select a mode** — this is what makes the pipeline flexible. Ceremony scales to the work, exactly as agent-selector scales models to tasks.
+
+> **"Mode" is not the `effort` parameter.** Mode sizes the *pipeline* — how many phases, gates and workers a run gets. `effort` is a per-dispatch model setting routed independently of tier (see agent-selector). A Quick-mode run can still dispatch a `high`-effort worker, and a Full-mode run is mostly `low`/`medium` ones.
 
 | Mode | When | Pipeline |
 |---|---|---|
@@ -59,7 +68,7 @@ Then **select a mode** — this is what makes the pipeline flexible. Effort scal
 | 🏗️ **Full** | Epics, 4+ tickets, cross-domain work, schema changes, ambiguous specs, anything irreversible | The complete pipeline below: dependency inference, full critical review, DEEP-tier plan + independent plan review, per-group gates, final review. |
 | 🔍 **Discovery** | No ticket, no code change; the deliverable is a findings/ideation **report** — a pain-point sweep, an audit, a spike | Parallel read-only discovery workers → main-loop synthesis → report saved to the vault (`$CTX/spikes/`). No plan approval, no execution, no gates, no PR. |
 
-Effort-scaling rules (mirror these when sizing worker counts): 1 worker for a simple lookup or fix; 2–4 workers for a standard ticket (discovery, implement, test, review); a full manifest via agent-selector only for Full mode.
+Worker-count rules (mirror these when sizing a run): 1 worker for a simple lookup or fix; 2–4 workers for a standard ticket (discovery, implement, test, review); a full manifest via agent-selector only for Full mode.
 
 State the chosen mode in one line and proceed. The user can override ("run this as Full"). **Default down, escalate up**: if a Quick run surfaces unexpected complexity (schema change, cross-domain import, ambiguous AC), stop and escalate the mode — never push through.
 
@@ -137,7 +146,7 @@ $CTX/tickets/{TICKET}/
   "ticket_status": "In Progress",
   "worktree": "<worktree path>",
   "manifest": [
-    { "id": 1, "task": "...", "tier": "FAST", "agent": "implementer", "status": "done", "retries": 0,
+    { "id": 1, "task": "...", "tier": "LIGHT", "effort": "low", "agent": "implementer", "status": "done", "retries": 0,
       "artefacts": ["src/..."] }
   ],
   "groups": [ { "group": "A", "tasks": [1], "status": "done" } ],
@@ -159,15 +168,16 @@ Move ticket(s) to In Progress after plan approval.
 
 **Approval before each task group** (Quick mode: single approval for the whole run).
 
-### Delegation contract — every dispatched worker prompt MUST contain all seven
+### Delegation contract — every dispatched worker prompt MUST contain all eight
 
+0. **Routing** — the tier *and* the effort from the manifest, both pinned explicitly at dispatch (Task `model`/`effort`, Workflow `opts.model`/`opts.effort`). Omitting either inherits the session's value and silently discards the manifest's routing.
 1. **Objective** — one task, one responsibility, stated in one sentence.
 2. **Output format** — the Return Contract below, verbatim.
 3. **Tool & convention guidance** — which project conventions/skills to follow, which tools it may use, and where to look first.
 4. **Boundaries** — which files/domains are in scope; an explicit "do not touch" list; no unrelated changes.
 5. **Context** — the worktree path, the plan at `$CTX/tickets/{TICKET}/plan.md`, and the outputs of prerequisite tasks (paths, not contents).
 6. **Verification** — the exact test and lint commands to run before reporting done, plus a pre-commit self-check (null-safe access on all hops, no duplicated logic, every new branch/method has a test, reuse existing helpers).
-7. **Conduct** — the worker-conduct block (see agent-selector); DEEP/FRONTIER workers also get a self-refutation step.
+7. **Conduct** — the worker-conduct block from `${CLAUDE_PLUGIN_ROOT}/skills/agent-selector/references/worker-conduct.md`, pasted verbatim, identical for every tier. Resolve it with the same fail-open guard as the context store above: from a raw checkout `CLAUDE_PLUGIN_ROOT` is empty and the path collapses, so fall back to the checkout path. Add no other self-verification step — only DEEP/FRONTIER dispatches get that file's self-refutation rule, and below DEEP a double-check step costs tokens without improving results.
 
 A vague dispatch produces a vague result and there is no mid-flight correction — get the contract right the first time.
 
@@ -192,7 +202,7 @@ git fetch origin "$BASE"
 git worktree add "$TICKET_WORKTREE" -b {ticket-lowercase} "origin/$BASE"
 ```
 
-Copy any local, uncommitted environment files the build needs into the worktree. Delegate worktree creation to a FAST-tier worker when 3+ worktrees are needed.
+Copy any local, uncommitted environment files the build needs into the worktree. Delegate worktree creation to a LIGHT-tier worker when 3+ worktrees are needed.
 
 ### Dispatch rules
 
@@ -213,8 +223,9 @@ Blockers fixed before the next group. Suggestions → user.
 
 ### Failure escalation (cheap-first cascade)
 
-1. Retry once with the next tier up (per agent-selector's cascade), including the failure summary and `tests.failure_tail` — not the full transcript — in the new prompt.
-2. Second failure → escalate to the user with what was attempted and why it failed.
+1. Retry once at **one effort step up on the same tier** (per agent-selector's cascade — effort climbs before tier, because most failures are under-thought rather than under-powered), including the failure summary and `tests.failure_tail` — not the full transcript — in the new prompt.
+2. Still failing → retry once at the next tier up, with effort reset to that tier's routed level.
+3. Second failure at the same tier after its effort step → escalate to the user with what was attempted and why it failed.
 
 **Original tier → one upgrade → user. Never more than one retry.**
 

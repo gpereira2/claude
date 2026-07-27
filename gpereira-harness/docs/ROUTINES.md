@@ -19,7 +19,13 @@ runs until you schedule it.
 | Routine | What it does | Depends on |
 |---|---|---|
 | `weekly-skill-observation-review` | Runs the `task-observer` weekly review — consolidates OPEN skill observations into skill updates | the bundled `task-observer` skill |
+| `monday-harness-sync` | Propagates the week's learnings between the live `~/.claude` harness and this plugin, per-hunk. Applies only additive changes; stages the rest | `routines/harness-sync/SKILL.md`, `git` |
 | `worktree-status` | Read-only git worktree hygiene report — active worktrees, merged/closed-PR reap candidates, prunable/orphaned branches | `git`, `gh` (no Docker) |
+
+> **Pair the two weekly routines in order.** `weekly-skill-observation-review`
+> runs Friday and edits the live side in place; `monday-harness-sync` then
+> propagates those edits to the plugin. Reversing the order syncs a stale live
+> harness, and running them the same day races the review's own writes.
 
 Machine- or workspace-specific routines (control-board checks, regression sweeps,
 Docker/worktree pruning, anything that DMs a chat workspace) are intentionally

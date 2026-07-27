@@ -95,6 +95,8 @@ DENY = [
      "git clean -f deletes untracked files — forbidden from agent sessions"),
     (r"(^|\s)(mysql|psql)\b.*\b(drop\s+(database|table)|truncate\s)\w*",
      "raw destructive SQL from a shell is forbidden — hand the SQL to the user"),
+    (r"artisan\s+(migrate:fresh|migrate:refresh|db:wipe)\b",
+     "drops tables and destroys database data — forbidden from agent sessions"),
 ]
 
 

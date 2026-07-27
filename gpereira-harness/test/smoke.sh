@@ -8,7 +8,7 @@ command -v jq >/dev/null 2>&1 || fail "jq not installed"
 
 # 1. resolver returns valid JSON with all four tiers
 OUT="$("$ROOT/lib/resolve-models.sh")"
-echo "$OUT" | jq -e '.FAST and .STANDARD and .DEEP and .FRONTIER' >/dev/null \
+echo "$OUT" | jq -e '.LIGHT and .STANDARD and .DEEP and .FRONTIER' >/dev/null \
   || fail "resolver did not return all four tiers: $OUT"
 
 # 2. single-tier lookups return non-empty strings
@@ -31,7 +31,8 @@ jq -e . "$ROOT/hooks/hooks.json" >/dev/null || fail "hooks.json invalid"
 for f in agent-dispatch-conduct-gate.sh subagent-contract-gate.sh subagent-trace.sh \
          subagent-trace-summary.sh precompact-handoff.sh sessionstart-handoff.sh \
          storage-root-hint.sh plan-persist-context.sh docs-location-guard.sh \
-         secret-scan-guard.py bash-clause-guard.py; do
+         secret-scan-guard.py bash-clause-guard.py credential-file-guard.py \
+         pr-context-hint.sh; do
   [ -f "$ROOT/hooks/$f" ] || fail "missing hook: $f"
   [ -x "$ROOT/hooks/$f" ] || fail "hook not executable: $f"
 done
@@ -45,6 +46,24 @@ echo '{"tool_input":{"command":"x && rm -rf ~"}}' | python3 "$ROOT/hooks/bash-cl
   | jq -e '.hookSpecificOutput.permissionDecision=="deny"' >/dev/null || fail "bash-guard did not deny rm -rf ~"
 echo '{"tool_input":{"command":"ls -la"}}' | python3 "$ROOT/hooks/bash-clause-guard.py" \
   | grep -q . && fail "bash-guard should be silent on a safe command" || true
+
+# credential-file-guard: blocks credential reads across every content-returning tool,
+# including Grep (which is NOT covered by a Read|Edit|Write matcher yet prints file content).
+python3 "$ROOT/hooks/credential-file-guard.test.py" >/dev/null || fail "credential-file-guard unit cases failed"
+for TOOL_JSON in '{"tool_name":"Read","tool_input":{"file_path":"/repo/auth.json"}}' \
+                 '{"tool_name":"Grep","tool_input":{"pattern":"x","path":"/repo/.npmrc"}}' \
+                 '{"tool_name":"Bash","tool_input":{"command":"cat /repo/auth.json"}}'; do
+  echo "$TOOL_JSON" | python3 "$ROOT/hooks/credential-file-guard.py" \
+    | jq -e '.decision=="block"' >/dev/null || fail "credential-guard failed to block: $TOOL_JSON"
+done
+echo '{"tool_name":"Read","tool_input":{"file_path":"/repo/composer.json"}}' \
+  | python3 "$ROOT/hooks/credential-file-guard.py" | grep -q . \
+  && fail "credential-guard should be silent on a normal file" || true
+
+# secret-scan-guard: default posture is a hard block, not an unreliable "ask".
+printf '{"tool_input":{"file_path":"/tmp/x","content":"AKIA%s"}}' "0000000000000000" \
+  | python3 "$ROOT/hooks/secret-scan-guard.py" | jq -e '.decision=="block"' >/dev/null \
+  || fail "secret-scan-guard did not block key material by default"
 
 # 8. leak gate — no company-internal references in shareable content.
 #    Scans prose/config/hooks/routines; lib/ is excluded because it legitimately
