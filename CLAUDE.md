@@ -1,23 +1,50 @@
 # Claude Config Repo
 
-This repository tracks personal Claude Code configuration for syncing across machines.
+A Claude Code **plugin marketplace** (published via `.claude-plugin/marketplace.json`)
+plus a tracked mirror of the personal global config, so a machine rebuild doesn't lose it.
+
+See [README.md](README.md) for install instructions and the plugin overview.
 
 ## Structure
 
-- `config/` — symlink target for `~/.claude/`. Contains CLAUDE.md (global instructions), settings.json, agents, skills, and plugins.
-- `mcp.json` — standalone MCP server definitions, merged into `~/.claude.json` via `scripts/merge-mcp.sh`.
-- `scripts/` — utility scripts (currently just merge-mcp.sh).
+- `.claude-plugin/marketplace.json` — marketplace manifest. Lists the plugins and where they live.
+- `gpereira-harness/` — the published plugin: skills, worker agents, hooks, routines, four-tier
+  model routing, and a vault-backed context store. Has its own README, docs, and test suite.
+- `SYSTEM_PROMPT.md` — mirror of `~/.claude/CLAUDE.md`. Not auto-loaded by Claude Code, so it
+  is inert here; restore with `cp SYSTEM_PROMPT.md ~/.claude/CLAUDE.md`.
+- `skills/`, `agents/` — standalone assets kept outside the plugin. `agent-selector` and
+  `critical-reviewer` also exist inside `gpereira-harness/skills/`; the plugin copy is the
+  one that ships.
+- `mcp.json` — MCP server definitions, kept out of the plugin by design so nothing personal
+  is published. Merge into `~/.claude.json` by hand.
+- `.github/workflows/smoke.yml` — CI. Runs the plugin smoke test and leak gate on every push and PR.
 
 ## Conventions
 
-- Machine-specific config (hooks, paths) belongs in `settings.local.json`, which is gitignored.
-- Plugin cache is gitignored — only plugin manifests and configs are tracked.
-- Memory files are not tracked.
-- Skills follow the Claude Code structure: `config/skills/<name>/SKILL.md`.
-- Agents are markdown files in `config/agents/`.
+- **Nothing personal in `gpereira-harness/`.** No company references, no absolute home paths,
+  no MCP registrations, no personal `CLAUDE.md`. The leak gate enforces this.
+- The leak gate only scans **inside the plugin** (`skills/`, `agents/`, `hooks/`, `routines/`,
+  `commands/`, `docs/`, `README.md`, `.claude-plugin/`). Files at the repo root — including
+  `SYSTEM_PROMPT.md` and `mcp.json` — are **not** covered, so review those by hand.
+- Machine-specific config belongs in `settings.local.json`, which is gitignored and never tracked here.
+- Plugin cache, memory files and `files.zip` are gitignored — check `.gitignore` before adding
+  a new config type.
+- Skills follow the standard layout: `<skills-dir>/<name>/SKILL.md`, with optional `references/`.
+- This repo is private. It is still the wrong place for tokens or key material — the secret gate
+  fails the build on anything that looks like one.
 
 ## Working in this repo
 
-- When adding a new skill, create `config/skills/<name>/SKILL.md` with appropriate frontmatter.
-- When adding MCP servers, add to `mcp.json` and test with `./scripts/merge-mcp.sh`.
-- The `.gitignore` excludes a large number of transient Claude files — check it before adding new config types.
+- Run the smoke test before pushing anything that touches the plugin:
+
+  ```bash
+  bash gpereira-harness/test/smoke.sh
+  ```
+
+- When adding a skill to the plugin, create `gpereira-harness/skills/<name>/SKILL.md` with
+  `name` and `description` frontmatter, then re-run the smoke test.
+- When changing `~/.claude/CLAUDE.md`, re-copy it to `SYSTEM_PROMPT.md` and update the
+  `Last synced` date in its header comment — the mirror is manual, nothing syncs it automatically.
+- Cross-cutting principles live in `gpereira-harness/docs/PRINCIPLES.md`. The personal copy at
+  `~/.claude/skill-observations/principles.md` is maintained separately; adding a principle to
+  one does not propagate it to the other.
