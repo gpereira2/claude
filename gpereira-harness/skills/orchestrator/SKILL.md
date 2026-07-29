@@ -208,7 +208,7 @@ Copy any local, uncommitted environment files the build needs into the worktree.
 
 - Groups run **sequentially by dependency**: database → backend → frontend → tests.
 - Within a group, dispatch independent tasks **in one batch** (single message, multiple Task calls) — max 3 concurrent.
-- Workers never integrate each other's output; the orchestrator sequences integration as its own tasks.
+- Workers never integrate each other's output; the orchestrator sequences integration as its own tasks. Within a group, write sets must be disjoint — the worktree is per ticket, not per task, so two workers editing one file silently lose one set of edits.
 - After each group: one status line (finished / remaining / issues).
 
 ### Review gate (after each group) — fast gate

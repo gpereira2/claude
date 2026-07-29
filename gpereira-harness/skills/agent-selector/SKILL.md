@@ -198,6 +198,7 @@ Always produce the manifest and show it for confirmation before spawning anythin
 
 Rules:
 - Max 3 tasks per parallel group — beyond that, summary-merging overhead exceeds the parallelism gain.
+- Tasks in the same parallel group must have **disjoint write sets**. The worktree is per ticket, not per task, so two workers editing one file silently lose one set of edits — put overlapping writes in different groups. "No hidden dependencies" is about ordering and does not cover this.
 - Every task's dispatch prompt must embed the orchestrator's **delegation contract** (objective, return contract, tools/conventions, boundaries, context paths, verification commands, conduct) — see the `orchestrator` skill, Phase 4.
 - Every task returns the standard **Return Contract** — the one-line JSON schema; artefacts to disk as paths, never inlined.
 - Every dispatch embeds the worker-conduct block from `references/worker-conduct.md` verbatim — the same block for every tier, plus the self-refutation rule for DEEP/FRONTIER only.
@@ -246,3 +247,6 @@ Genuine verification still belongs in a dispatch, but as **tool execution, not i
 - **Deterministic before inferential** — if a task matches the routing table, its tier is settled; do not re-litigate.
 - **Reuse context** — extract tasks from a plan already in the conversation rather than re-asking.
 - **One-line tier reasons** — only for judgement-routed tasks; deterministic routes need no explanation.
+
+---
+The parallel-group write-set rule derived in concept from Builder.io's skills repo, MIT.

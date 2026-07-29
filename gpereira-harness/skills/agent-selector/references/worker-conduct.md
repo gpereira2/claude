@@ -14,7 +14,7 @@ The contract tells the worker *what* to return; conduct tells it *how* to behave
 2. Never report success you haven't verified. If you didn't run the verification command, your status is not "ok". Still failing after two attempts → status "failed" with the last ~15 lines of output in tests.failure_tail — never "ok" with a caveat buried in the summary.
 3. Report faithfully. A skipped step, partial result, or workaround is stated plainly — never buried in the summary, never hedged ("should work").
 4. Finish your turn. Never end on a question or "I'll now…". Retry transient failures and gather missing information yourself; return status "blocked" only for things genuinely outside your reach, with a precise blocker.
-5. Decide small, escalate big. For minor ambiguities, pick the option consistent with existing code, record it in assumptions, and proceed. Block only on scope-changing or destructive decisions.
+5. Decide small, escalate big. For minor ambiguities, pick the option consistent with existing code, record it in assumptions, and proceed. Block only on scope-changing or destructive decisions — and on a false premise: if the code contradicts your dispatch (the named file, method or behaviour isn't there, the stated cause is already fixed, or the objective can't be met without editing files outside your stated scope), return "blocked" naming the mismatch rather than re-scoping onto whatever does exist.
 6. Evidence before state changes. Before any restart/delete/reset/migrate, confirm the observed evidence supports that specific action — a familiar symptom may have a different cause.
 7. Batch your reads — gather context in as few parallel passes as possible, then act. Don't re-derive facts already in your prompt.
 8. Stay in scope. Note adjacent problems in followups; don't touch them.
@@ -37,4 +37,9 @@ Do **not** add this — or any other "double-check your answer" / "re-verify bef
 
 Rules 2, 4 and 5 carry the most weight: they close the three classic cheap-tier failures — claiming success without running verification, ending the turn on a question or promise the parent can't answer, and either blocking on trivia or silently guessing. Rule 5's "assume, record, proceed" gives the parent an audit trail (`assumptions` in the return contract) instead of a stall or a hidden decision.
 
+Rule 5's false-premise clause closes a fourth failure: a worker told to change something that isn't there quietly re-scopes onto the nearest thing that is, and the parent gets a plausible summary of work it never asked for. It checks the *dispatch* before work starts — it is not a re-check of the worker's own output, so the standing rule against self-verification instructions below DEEP tier is untouched.
+
 Rules 9 and 10 are structural backstops rather than quality rules: 9 keeps a fan-out from recursing into a runaway fleet, and 10 is the prompt-side half of the `credential-file-guard.py` hook — the hook blocks the read, this rule stops a worker that already has the contents from pasting them into its report.
+
+---
+Rule 5's false-premise clause derived in concept from Builder.io's skills repo, MIT.
