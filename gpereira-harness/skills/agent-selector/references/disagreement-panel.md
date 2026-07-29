@@ -24,7 +24,7 @@ Odd count avoids ties. Five captures ~90% of the independence you can realistica
 | Maintainer | 12-month code health: module boundaries, established patterns, coupling, naming, test coverage. | DEEP |
 | Domain / User advocate | Correctness from the end-user's view; real workflows, edge cases, awkward data states. | STANDARD |
 
-**Diversity is the whole point.** Spread judges across model *generations* (not just tiers) so they don't all share one model's blind spots — a previous-generation model in one seat is a feature, and `resolve-models.sh` can list versions within a family for exactly this.
+**Diversity is the whole point.** Spread judges across model *generations* (not just tiers) so they don't all share one model's blind spots — a previous-generation model in one seat is a feature. `resolve-models.sh` does **not** help here — it returns exactly one ID per tier (the newest in the family), so generational spread is a deliberate per-seat choice at dispatch, not something the resolver hands you.
 
 > **Cross-provider ceiling (honest caveat).** All judges here are Claude — same-provider models have correlated errors (research shows even *cross-family* judges correlate ~0.6; same-family much more). Persona + generation diversity + adversarial framing is the independence you can get inside one provider. If you can reach other providers via API/MCP, diversifying provider families is the single biggest independence gain — do it there.
 

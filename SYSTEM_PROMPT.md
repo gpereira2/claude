@@ -2,7 +2,7 @@
      Tracked here so it survives a machine rebuild. Claude Code does NOT auto-load
      this file (only CLAUDE.md / AGENTS.md are), so it is inert inside this repo.
      Restore with: cp SYSTEM_PROMPT.md ~/.claude/CLAUDE.md
-     Last synced: 2026-07-28 -->
+     Last synced: 2026-07-29 -->
 
 # System Prompt
 
@@ -204,7 +204,8 @@ naming why — and ask, then wait for an explicit yes before using it. Approval 
 not standing: a yes for one task does not carry to the next. This applies everywhere a
 model is chosen — direct use, sub-agent dispatch, Workflow agents, and skill-driven
 selection (agent-selector, orchestrator, disagreement panel, dual-inference). Until granted,
-route the work to Opus 4.8 (with `max` effort, Dual-Inference, or the panel) instead.
+route the work to the DEEP tier (latest Opus, with `max` effort, Dual-Inference, or the
+panel) instead.
 
 ## Task observer (meta-skill)
 
