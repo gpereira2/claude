@@ -43,6 +43,10 @@ routing; optional).
 | `skills/agent-selector/references/worker-conduct.md` | The canonical conduct block, embedded verbatim in every dispatch — single source for the skill, the orchestrator's delegation contract, and `/review-queue` |
 | `skills/agent-selector/references/disagreement-panel.md` | N-judge adversarial adjudication for decisions that are complex *and* contested; the generalisation of dual-inference |
 | `skills/task-observer/` | Continuous skill-improvement registry (observation log + weekly review). Third-party, CC BY 4.0 — see below |
+| `skills/visual-plan/` | Renders a vault plan or recap as a self-contained Artifact/HTML view — vault markdown stays the record, the page is only a view |
+| `skills/agent-watchdog/` | Audits a *different* agent's or tool's handed-over work for drift from the brief and unverified completion claims |
+| `skills/plan-arbiter/` | Merges two or more competing plans for the same work into one execution direction |
+| `skills/adhd/` | `/adhd` — user-invoked only; shapes every reply for zero-friction reading until told to stop |
 | `agents/*.md` | `discovery`, `implementer`, `test-writer`, `reviewer` — least-privilege tool allowlists |
 | `hooks/` | Enforcement, safety, and observability hooks wired via `hooks/hooks.json` (see below) |
 | `lib/resolve-models.sh` | Hybrid tier→model resolver: live Anthropic Models API, falls back to `tiers.json` offline |
