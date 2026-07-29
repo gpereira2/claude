@@ -78,6 +78,7 @@ Plugin-scoped and endpoint-free — they wire into your session via
 | `storage-root-hint.sh` | SessionStart / SubagentStart | Injects the vault (`$CLAUDE_CONTEXT_DIR`) as the canonical doc/state root, keeping generated files out of the repo |
 | `plan-persist-context.sh` | PostToolUse(ExitPlanMode) | Nudges the approved plan into the vault (`tickets/<TICKET>/plan.md` or `plans/<date>-slug.md`) |
 | `docs-location-guard.sh` | PreToolUse(Write) | **Opt-in** (`CLAUDE_HARNESS_DOCS_GUARD=1`): redirects new generated `.md` from the repo to the vault; off by default so it never fights real repo docs |
+| `php-convention-lint.sh` | PostToolUse(Write\|Edit) | **Opt-in** (`CLAUDE_HARNESS_PHP_LINT=1`): advisory warnings on edited `.php` files for unprefixed `Log::` messages and static job dispatch. Reports, never blocks; off by default since both are project policy, not universal PHP |
 
 ### Two things to know before trusting a guard
 

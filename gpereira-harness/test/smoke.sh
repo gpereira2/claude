@@ -32,7 +32,7 @@ for f in agent-dispatch-conduct-gate.sh subagent-contract-gate.sh subagent-trace
          subagent-trace-summary.sh precompact-handoff.sh sessionstart-handoff.sh \
          storage-root-hint.sh plan-persist-context.sh docs-location-guard.sh \
          secret-scan-guard.py bash-clause-guard.py credential-file-guard.py \
-         pr-context-hint.sh; do
+         pr-context-hint.sh php-convention-lint.sh; do
   [ -f "$ROOT/hooks/$f" ] || fail "missing hook: $f"
   [ -x "$ROOT/hooks/$f" ] || fail "hook not executable: $f"
 done

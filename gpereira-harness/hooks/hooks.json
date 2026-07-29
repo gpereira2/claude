@@ -38,6 +38,12 @@
         "hooks": [
           { "type": "command", "command": "bash \"${CLAUDE_PLUGIN_ROOT}\"/hooks/plan-persist-context.sh" }
         ]
+      },
+      {
+        "matcher": "Write|Edit",
+        "hooks": [
+          { "type": "command", "command": "bash \"${CLAUDE_PLUGIN_ROOT}\"/hooks/php-convention-lint.sh" }
+        ]
       }
     ],
     "SubagentStart": [
