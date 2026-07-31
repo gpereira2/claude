@@ -127,6 +127,8 @@ Planning is done entirely by sub-agents.
 
 The plan must include: domain identification, the manifest, parallel groups with serial gates, a review gate after each group, a UI test plan if a frontend is touched, and worktree references.
 
+**Browser test plans name a browser tool that can actually read the page.** A host-integrated browser extension is the safer first choice: an in-app browser pane may refuse its DOM-read tools on non-standard origins (per-action approval) even though navigation succeeds, so starting there costs a round-trip that yields nothing. And when the plan calls for a request-count or page-load baseline, measure from the web server's access logs rather than `performance.getEntriesByType('resource')` — under a dev-mode bundler the ~250-entry resource buffer fills with module scripts before the app's own XHRs fire, and `setResourceTimingBufferSize` does not survive a reload. When dev-mode tooling floods browser instrumentation, measure at the server boundary instead.
+
 ### Ticket folder structure — one folder per ticket, in the vault
 
 ```
@@ -176,8 +178,10 @@ Move ticket(s) to In Progress after plan approval.
 3. **Tool & convention guidance** — which project conventions/skills to follow, which tools it may use, and where to look first.
 4. **Boundaries** — which files/domains are in scope; an explicit "do not touch" list; no unrelated changes.
 5. **Context** — the worktree path, the plan at `$CTX/tickets/{TICKET}/plan.md`, and the outputs of prerequisite tasks (paths, not contents).
-6. **Verification** — the exact test and lint commands to run before reporting done, plus a pre-commit self-check (null-safe access on all hops, no duplicated logic, every new branch/method has a test, reuse existing helpers).
+6. **Verification** — the exact test and lint commands to run before reporting done, plus a pre-commit self-check (null-safe access on all hops, no duplicated logic, every new branch/method has a test, reuse existing helpers). Browser-verification tasks name the specific browser tool to use, and take any request-count or load baseline from web-server access logs rather than browser resource timing.
 7. **Conduct** — the worker-conduct block from `${CLAUDE_PLUGIN_ROOT}/skills/agent-selector/references/worker-conduct.md`, pasted verbatim, identical for every tier. Resolve it with the same fail-open guard as the context store above: from a raw checkout `CLAUDE_PLUGIN_ROOT` is empty and the path collapses, so fall back to the checkout path. Add no other self-verification step — only DEEP/FRONTIER dispatches get that file's self-refutation rule, and below DEEP a double-check step costs tokens without improving results.
+
+**Mechanical migration dispatches state the target's public contract inline, never by reference.** When a fan-out updates call sites, mocks, or specs against a module that changed shape, spell out the full contract in the prompt — which named exports, which keys, which aliases, which destructuring form. "Update the mocks to match the new module" produces guesswork; the exact contract produces clean parallel migrations across a dozen agents.
 
 A vague dispatch produces a vague result and there is no mid-flight correction — get the contract right the first time.
 
@@ -216,6 +220,8 @@ Copy any local, uncommitted environment files the build needs into the worktree.
 Intermediate gates optimise for **speed** — they run between every group, so a slow gate multiplies across the pipeline. Dispatch a single `reviewer` worker (fresh context, read-only tools) against the group's diff, running a code-review skill if you have one, augmented with a project checklist: null safety on all access hops, no duplication of existing helpers, test coverage of every new branch, transactions around multi-write sequences, tenant/isolation scoping where relevant, and diff-scope discipline.
 
 Deterministic checks (tests pass, linter clean) come from exit codes, not the reviewer's judgement. Prefer a `SubagentStop` hook enforcing "tests pass + no writes outside `$TICKET_WORKTREE`" if configured; the reviewer then covers only what hooks can't.
+
+**When the group migrated tests, tell the reviewer to check assertions against intended behaviour, not current wiring.** An agent updating a spec preserves whatever the code does, bugs included — a migrated green test can encode the defect it was supposed to catch. The gate prompt must name the intent side to compare against (the component's props, the fixture's domain meaning, the acceptance criteria) so the reviewer verifies expected values rather than trusting a passing suite.
 
 **Treat every worker's `status`, `files_changed`, and `tests` fields as claims to verify, not facts.** At the gate, reconcile them against `git status --porcelain` (a worker reporting "1 file changed" when the tree shows 12 has misnarrated its work) and a first-party re-run of the test command — a sub-agent's "21 passed" is a claim until the gate reproduces it.
 

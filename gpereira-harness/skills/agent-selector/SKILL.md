@@ -170,6 +170,8 @@ When used: two sibling tasks, identical prompts, different models. Default pairi
 
 Never dual-inference: ambiguous tasks (clarify instead), tasks with one obvious answer, mechanical work, latency-critical paths.
 
+Worked pairings, the reconciliation prompt, and the version-pinning variant (two releases within one family rather than two families) are in `references/dual-inference.md`.
+
 **When the decision is contested as well as complex**, two models are the wrong shape — a 2-judge split has no way to resolve itself and averaging it destroys the signal. Escalate to the N-judge **disagreement panel** in `references/disagreement-panel.md`: distinct adversarial personas, spread across model generations, aggregated by divergence rather than majority vote. It is the generalisation of this section, not an alternative to it — use dual-inference for a second take on a single *task*, the panel for a *plan, design, or finding*.
 
 ## Step 4: Output — Task Manifest
@@ -200,7 +202,7 @@ Rules:
 - Max 3 tasks per parallel group — beyond that, summary-merging overhead exceeds the parallelism gain.
 - Tasks in the same parallel group must have **disjoint write sets**. The worktree is per ticket, not per task, so two workers editing one file silently lose one set of edits — put overlapping writes in different groups. "No hidden dependencies" is about ordering and does not cover this.
 - Every task's dispatch prompt must embed the orchestrator's **delegation contract** (objective, return contract, tools/conventions, boundaries, context paths, verification commands, conduct) — see the `orchestrator` skill, Phase 4.
-- Every task returns the standard **Return Contract** — the one-line JSON schema; artefacts to disk as paths, never inlined.
+- Every task returns the standard **Return Contract** — the one-line JSON schema in `references/spawn-examples.md`; artefacts to disk as paths, never inlined.
 - Every dispatch embeds the worker-conduct block from `references/worker-conduct.md` verbatim — the same block for every tier, plus the self-refutation rule for DEEP/FRONTIER only.
 
 ## Step 5: Execution

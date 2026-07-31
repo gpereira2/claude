@@ -158,6 +158,14 @@ the file, add it to this list.
 **Custom skills** (owned by the user, can be replaced) are everything else
 in the skills directory that isn't on the system list above.
 
+**Duplicate-name check.** While inventorying, flag any skill *name* that
+appears from more than one source (repo skill, plugin, claude.ai/Cowork
+sync). A name is a routing key — two sources shipping the same name is a
+collision, not redundancy: it burns always-loaded description tokens twice
+and makes routing between them arbitrary. Resolving a collision (uninstall,
+rename, or prune the sync) is a structural user decision, so report it in
+the summary rather than resolving it autonomously.
+
 **Step 3 — Cross-check observations against every skill**
 
 For each OPEN observation, evaluate whether it is relevant to each skill. Do

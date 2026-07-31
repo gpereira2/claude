@@ -5,7 +5,7 @@
     {
       "name": "gpereira-harness",
       "source": "./gpereira-harness",
-      "description": "Portable Claude Code harness: seven skills (orchestrator, agent-selector, task-observer, agent-watchdog, plan-arbiter, visual-plan, adhd), four named worker agents, four-tier model routing (API-with-fallback), create-pr and review-queue commands, worker-conduct and return-contract checks on every subagent dispatch, safety hooks (bash clause, secret scan, credential files, docs location), session and compaction handoffs, and an Obsidian-compatible context store. No MCP registrations bundled by design."
+      "description": "Portable Claude Code harness: seven skills (orchestrator, agent-selector, task-observer, agent-watchdog, plan-arbiter, visual-plan, adhd), four named worker agents, four-tier model routing (API-with-fallback), start-ticket, create-pr and review-queue commands, worker-conduct and return-contract checks on every subagent dispatch, safety hooks (bash clause, secret scan, credential files, docs location), session and compaction handoffs, and an Obsidian-compatible context store. No MCP registrations bundled by design."
     }
   ]
 }

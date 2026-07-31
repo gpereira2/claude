@@ -1,5 +1,5 @@
 ---
-description: "Create a draft PR for the current branch in a standard format — ticket-prefixed title, What / Why / How / Test sections, draft, base branch configurable, no pre-selected reviewers. Handles the tail — optional commit + push, draft PR, CI chase, mark-ready — with every irreversible step behind explicit confirmation."
+description: "Create a draft PR for the current branch in a standard format — ticket-prefixed title, What / Why / How / Test sections, draft, based on the repository's default branch, no pre-selected reviewers. Handles the tail — optional commit + push, draft PR, CI chase, mark-ready — with every irreversible step behind explicit confirmation."
 argument-hint: "[optional: short description or ticket override, e.g. 'ABC-1234' or 'Fix flaky test']"
 allowed-tools: ["Bash", "Read", "Grep", "Glob"]
 ---
@@ -8,7 +8,15 @@ allowed-tools: ["Bash", "Read", "Grep", "Glob"]
 
 Open a draft pull request for the current local branch.
 
-**Base branch:** `${CLAUDE_BASE_BRANCH:-main}` (override by exporting `CLAUDE_BASE_BRANCH`).
+**Base branch:** the repository's own default branch, resolved at run time — never assumed to be `main`. Resolve it once and reuse it:
+
+```bash
+BASE_BRANCH="$(git symbolic-ref --short refs/remotes/origin/HEAD 2>/dev/null | sed 's|^origin/||')"
+[ -n "$BASE_BRANCH" ] || BASE_BRANCH="$(gh repo view --json defaultBranchRef -q .defaultBranchRef.name 2>/dev/null)"
+[ -n "$BASE_BRANCH" ] || BASE_BRANCH=main
+```
+
+The local ref is tried first (no network, works in a worktree); `gh` is the authoritative fallback when `origin/HEAD` isn't set.
 
 **Hard rules — non-negotiable:**
 
@@ -38,7 +46,6 @@ Open a draft pull request for the current local branch.
 ## Step 3 — Gather context (diff against the merge base, not the base branch directly)
 
 ```bash
-BASE_BRANCH="${CLAUDE_BASE_BRANCH:-main}"
 BASE=$(git merge-base "$BASE_BRANCH" HEAD)
 git log "$BASE"..HEAD --format=%B
 git diff "$BASE"..HEAD --stat
@@ -98,7 +105,7 @@ Do not proceed without an explicit affirmative.
 ## Step 7 — Create
 
 ```bash
-gh pr create --draft --base "${CLAUDE_BASE_BRANCH:-main}" --title "<title>" --body-file - <<'EOF'
+gh pr create --draft --base "$BASE_BRANCH" --title "<title>" --body-file - <<'EOF'
 <assembled body>
 EOF
 ```

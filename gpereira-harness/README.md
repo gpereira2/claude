@@ -52,7 +52,7 @@ routing; optional).
 | `lib/resolve-models.sh` | Hybrid tier→model resolver: live Anthropic Models API, falls back to `tiers.json` offline |
 | `lib/tiers.json` | LIGHT / STANDARD / DEEP / FRONTIER → family regex patterns + pinned fallbacks |
 | `lib/context-store.sh` | Resolves `$CLAUDE_CONTEXT_DIR` (default `~/.claude/context`); inits an Obsidian vault |
-| `commands/` | `/create-pr` (draft PR in a fixed format), `/review-queue` (parallel review of PRs awaiting you; never posts unprompted) |
+| `commands/` | `/start-ticket` (ticket → fresh branch/worktree + seeded vault folder + orchestrator recommendation), `/create-pr` (draft PR in a fixed format), `/review-queue` (parallel review of PRs awaiting you; never posts unprompted) |
 | `routines/` | Scheduled-task templates (not auto-loaded) — see [`docs/ROUTINES.md`](docs/ROUTINES.md) |
 | `docs/PRINCIPLES.md` | Cross-cutting principles, each extracted from an observed failure — the checklist for writing or reviewing a skill |
 | `docs/` | MCP suggestions, routine registration, and a `CLAUDE.md` example (template only) |
