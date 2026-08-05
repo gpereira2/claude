@@ -47,6 +47,10 @@ routing; optional).
 | `skills/agent-watchdog/` | Audits a *different* agent's or tool's handed-over work for drift from the brief and unverified completion claims |
 | `skills/plan-arbiter/` | Merges two or more competing plans for the same work into one execution direction |
 | `skills/adhd/` | `/adhd` — user-invoked only; shapes every reply for zero-friction reading until told to stop |
+| `skills/research/` | Investigates a question against primary sources only and leaves a cited note in the vault's `spikes/` |
+| `skills/resolving-merge-conflicts/` | Resolves an in-progress merge/rebase by intent — traces each side to its source, never `--abort`, finishes the operation |
+| `skills/handoff/` | `/handoff` — the curated tier of the handoff system: synthesises a vault handoff doc for a fresh agent (seeded from the auto-snapshot below), referencing artifacts rather than copying them |
+| `skills/ux-review/` | Guides a non-technical reviewer through a structured UX review of a ticket/PR; a review harness that leaves project startup to the project |
 | `agents/*.md` | `discovery`, `implementer`, `test-writer`, `reviewer` — least-privilege tool allowlists |
 | `hooks/` | Enforcement, safety, and observability hooks wired via `hooks/hooks.json` (see below) |
 | `lib/resolve-models.sh` | Hybrid tier→model resolver: live Anthropic Models API, falls back to `tiers.json` offline |
@@ -55,6 +59,7 @@ routing; optional).
 | `commands/` | `/start-ticket` (ticket → fresh branch/worktree + seeded vault folder + orchestrator recommendation), `/create-pr` (draft PR in a fixed format), `/review-queue` (parallel review of PRs awaiting you; never posts unprompted) |
 | `routines/` | Scheduled-task templates (not auto-loaded) — see [`docs/ROUTINES.md`](docs/ROUTINES.md) |
 | `docs/PRINCIPLES.md` | Cross-cutting principles, each extracted from an observed failure — the checklist for writing or reviewing a skill |
+| `docs/writing-for-agents.md` | The authoring standard for skills and agent-facing docs — context pointers, the two loads, information hierarchy, leading words, pruning |
 | `docs/` | MCP suggestions, routine registration, and a `CLAUDE.md` example (template only) |
 | `test/smoke.sh` | Sanity checks + a leak gate (internal-reference / secret / absolute-path scan) |
 
@@ -77,8 +82,8 @@ Plugin-scoped and endpoint-free — they wire into your session via
 | `credential-file-guard.py` | PreToolUse(Read\|Edit\|Write\|Grep\|Glob\|NotebookEdit\|Bash) | Hard-blocks reads of `auth.json`, `.env*` (bar `.example`/`.sample`/`.template`/`.dist`), `.npmrc`, `netrc`, and `*.pem`, on both file-path and shell-command inputs |
 | `pr-context-hint.sh` | SessionStart | Injects the current branch's PR state — number, draft, CI rollup, review decision, mergeability — via read-only `gh`. Skips default branches; fails open |
 | `context-status.sh` | statusline filter | Writes raw per-session context data for an external dashboard and passes stdin through. Not wired by `hooks.json` — pipe it before your statusline command |
-| `precompact-handoff.sh` | PreCompact | Snapshots in-flight session state before compaction |
-| `sessionstart-handoff.sh` | SessionStart(resume\|compact) | Re-injects the pre-compaction snapshot on resume |
+| `precompact-handoff.sh` | PreCompact | Automatic tier of the handoff system: snapshots in-flight state to the vault's `handoffs/auto/` before compaction |
+| `sessionstart-handoff.sh` | SessionStart(resume\|compact) | Re-injects the vault auto-snapshot on resume; the `handoff` skill turns it into a curated doc |
 | `storage-root-hint.sh` | SessionStart / SubagentStart | Injects the vault (`$CLAUDE_CONTEXT_DIR`) as the canonical doc/state root, keeping generated files out of the repo |
 | `plan-persist-context.sh` | PostToolUse(ExitPlanMode) | Nudges the approved plan into the vault (`tickets/<TICKET>/plan.md` or `plans/<date>-slug.md`) |
 | `docs-location-guard.sh` | PreToolUse(Write) | **Opt-in** (`CLAUDE_HARNESS_DOCS_GUARD=1`): redirects new generated `.md` from the repo to the vault; off by default so it never fights real repo docs |

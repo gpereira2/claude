@@ -83,6 +83,8 @@ Effort inherits from the session when omitted, exactly as `model` does — so an
 Read the full plan. Identify:
 - Atomic units of work — clear inputs, clear outputs, bounded file set, independently verifiable.
 - Dependencies (serial vs parallel).
+
+**Prefer vertical slices when the plan can be carved more than one way.** Cut **tracer bullets** — each unit runs end-to-end through every layer it touches (schema → logic → UI → test) to something independently demoable — rather than horizontal layers (all migrations, then all services, then all UI). A vertical slice is verifiable on its own and surfaces integration problems on the first slice instead of at the end. This shapes *what a unit is*; the database → backend → frontend build order and the disjoint-write parallel groups below still govern how one slice's tasks are then sequenced and parallelised.
 - Ambiguous tasks — **flag, don't guess**:
 
 ```

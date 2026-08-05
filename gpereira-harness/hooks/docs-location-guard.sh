@@ -20,7 +20,11 @@ case "$fp" in "$proj"/*) ;; *) exit 0 ;; esac   # outside the project (vault, sc
 
 rel="${fp#"$proj"/}"
 case "$rel" in
-    docs/*|.claude/*|documentation/*) exit 0 ;;   # legitimate repo doc locations
+    docs/*|*/docs/*|.claude/*|documentation/*|*/documentation/*) exit 0 ;;   # legitimate repo doc locations, at any depth
+    # plugin authoring surfaces — SKILL.md, agent/command/routine defs and their
+    # references are shipping repo content, never scratch notes. Match at any
+    # depth so a nested plugin dir (e.g. gpereira-harness/skills/…) is covered.
+    skills/*|*/skills/*|agents/*|*/agents/*|commands/*|*/commands/*|routines/*|*/routines/*) exit 0 ;;
 esac
 case "$(basename "$fp")" in
     README.md|readme.md|CLAUDE.md|CLAUDE.local.md|AGENT.md|AGENTS.md|CHANGELOG.md|CONTRIBUTING.md|LICENSE.md) exit 0 ;;
