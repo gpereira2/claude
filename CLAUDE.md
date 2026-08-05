@@ -42,7 +42,9 @@ See [README.md](README.md) for install instructions and the plugin overview.
   ```
 
 - When adding a skill to the plugin, create `gpereira-harness/skills/<name>/SKILL.md` with
-  `name` and `description` frontmatter, then re-run the smoke test.
+  `name` and `description` frontmatter, then re-run the smoke test. Write it against
+  `gpereira-harness/docs/writing-for-agents.md` — the authoring standard for skills and
+  agent-facing docs.
 - When changing `~/.claude/CLAUDE.md`, re-copy it to `SYSTEM_PROMPT.md` and update the
   `Last synced` date in its header comment — the mirror is manual, nothing syncs it automatically.
 - Cross-cutting principles live in `gpereira-harness/docs/PRINCIPLES.md`. The personal copy at
