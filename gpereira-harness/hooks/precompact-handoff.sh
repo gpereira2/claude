@@ -3,6 +3,12 @@
 # file before compaction. The matching SessionStart hook (sessionstart-handoff.sh)
 # re-injects it on resume/compact. PreCompact stdout is NOT injected as context,
 # so persistence to disk is the only channel.
+#
+# This is the AUTOMATIC, mechanical tier of the handoff system — a shell hook has
+# no model, so it can only dump raw transcript. The curated tier is the `handoff`
+# skill, which synthesises a handoff doc and can seed itself from this snapshot.
+# Both live under one vault folder: auto snapshots in handoffs/auto/, curated
+# handoffs in handoffs/. Fail-open and side-effect-light — never run vault init here.
 
 input=$(cat)
 session_id=$(echo "$input" | jq -r '.session_id // empty')
@@ -11,7 +17,11 @@ cwd=$(echo "$input" | jq -r '.cwd // empty')
 
 [ -n "$session_id" ] && [ -f "$transcript" ] || exit 0
 
-dir="$HOME/.claude/handoff"
+# Resolve the vault the same way the skill does; fall back without init side effects.
+STORE="${CLAUDE_PLUGIN_ROOT:-}/lib/context-store.sh"
+if [ -x "$STORE" ]; then CTX="$("$STORE" path 2>/dev/null)"; fi
+CTX="${CTX:-${CLAUDE_CONTEXT_DIR:-$HOME/.claude/context}}"
+dir="$CTX/handoffs/auto"
 mkdir -p "$dir"
 out="$dir/$session_id.md"
 
@@ -26,6 +36,11 @@ extract() { # $1=type $2=count $3=char cap per message
 }
 
 {
+  echo "---"
+  echo "title: Pre-compaction snapshot ($session_id)"
+  echo "type: handoff-auto"
+  echo "tags: [handoff, auto]"
+  echo "---"
   echo "# Pre-compaction session snapshot"
   echo "Generated: $(date '+%Y-%m-%d %H:%M') | cwd: ${cwd:-?} | branch: $branch"
   echo

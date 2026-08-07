@@ -122,7 +122,7 @@ Fold resolved answers into ticket context before planning.
 Planning is done entirely by sub-agents.
 
 **Planner** (Full: DEEP tier · Standard: STANDARD tier):
-1. Write the plan directly, covering: problem statement, approach, domain identification, task breakdown with ACs mapped, risks, and test strategy.
+1. Write the plan directly, covering: problem statement, approach, domain identification, task breakdown with ACs mapped, risks, and test strategy. Where the work can be carved more than one way, break it into **vertical slices** — tracer bullets, each independently demoable end-to-end — per agent-selector's Step 1, not horizontal layers.
 2. Run `agent-selector` to produce the task manifest (tasks, tiers, tools, dependencies, parallel groups).
 
 **User tier/model overrides apply pipeline-wide.** If the user overrides tier selection at any point ("put implementers on the DEEP tier", "use STANDARD for everything"), that override holds for the rest of the run — record it in `ticket.json` (`model_override`) so a resumed run honours it. When execution uses the Workflow tool, a pipeline-wide override must be pinned via `opts.model` on **every** `agent()` call: Workflow agents inherit the main-loop model by default, so the override is silently lost otherwise (see agent-selector Step 5).
