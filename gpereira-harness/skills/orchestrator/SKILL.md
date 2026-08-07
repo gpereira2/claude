@@ -94,6 +94,8 @@ Dispatch a single `discovery` worker per ticket (parallel, max 3 at a time) to g
 4. Existing PRs for the ticket (via your Git host CLI/MCP) — if one is in flight, read its diff + description *before* planning. An existing PR often already defines the fix scope; planning from scratch duplicates or contradicts it.
 5. A ≤200-word relevance summary: affected domain(s), likely files (paths only), risks.
 
+**Every negative existence claim carries where it searched.** A worker's "no X exists" is a claim about its own search, not about the codebase — a bounded grep that missed a generically-named module reads exactly like proof of absence. Require any "no dedicated X found" / "nothing handles Y" finding to name the paths, globs and search terms actually run, and treat a claim without that provenance as unverified. The same applies to structural-sharing claims ("both trees wrap the same component"): duplicated copies and a shared import look identical in a file listing.
+
 Infer ordering from the summaries:
 - Shared domain + schema changes → serial (migration before logic).
 - Explicit `blocks` / `is blocked by` relations in the tracker → respect them.
@@ -124,6 +126,8 @@ Planning is done entirely by sub-agents.
 2. Run `agent-selector` to produce the task manifest (tasks, tiers, tools, dependencies, parallel groups).
 
 **User tier/model overrides apply pipeline-wide.** If the user overrides tier selection at any point ("put implementers on the DEEP tier", "use STANDARD for everything"), that override holds for the rest of the run — record it in `ticket.json` (`model_override`) so a resumed run honours it. When execution uses the Workflow tool, a pipeline-wide override must be pinned via `opts.model` on **every** `agent()` call: Workflow agents inherit the main-loop model by default, so the override is silently lost otherwise (see agent-selector Step 5).
+
+**Discovery findings reach the planner as unverified input.** The planner dispatch must say so, and must require first-party re-verification of two kinds of claim before any task is built on them: a **negative existence claim** ("no dedicated model / service / preference store exists") and a **structural-sharing claim** ("both trees use the same shell component"). Those are the two that turn into whole slices of duplicated infrastructure — a generic property-bag store that discovery's search terms missed will be re-invented as a new table, model, service and DTO, and only an independent plan reviewer catches it. Re-verifying costs one grep; the slice costs a group.
 
 The plan must include: domain identification, the manifest, parallel groups with serial gates, a review gate after each group, a UI test plan if a frontend is touched, and worktree references.
 
@@ -191,7 +195,9 @@ A vague dispatch produces a vague result and there is no mid-flight correction �
 {"task_id":"<id>","status":"ok|partial|blocked|failed","summary":"<≤150 words — what changed and why>","files_changed":["<paths only, never contents>"],"commands_run":["<cmd>"],"tests":{"ran":true,"passed":true,"command":"<cmd>","failure_tail":null},"assumptions":["<decision made without asking>"],"blocker":null,"followups":["<note>"]}
 ```
 
-`ok` requires `tests.ran: true`; any silent gap → `partial`; `failed` feeds the escalation cascade with `tests.failure_tail` (last ~15 lines of failing output) as evidence. A worker resumed or re-notified after completing must re-emit the full populated contract — never an empty-array acknowledgement.
+`ok` requires `tests.ran: true`; any silent gap → `partial`; `failed` feeds the escalation cascade with `tests.failure_tail` (last ~15 lines of failing output) as evidence. A worker resumed or re-notified after completing must re-emit the full populated contract — never an empty-array acknowledgement — see the resume rule in `${CLAUDE_PLUGIN_ROOT}/skills/agent-selector/references/spawn-examples.md`.
+
+**Delivery recovery** — a background worker's completion notification is a signal, not the payload: post-completion system turns can displace the final-message slot, so the notification's result field often carries no contract. When it doesn't, read the last JSON contract match from the worker's task output-file transcript — that is the durable artefact — before doing anything else. Only if the transcript has no contract, fall back to a resend ping asking the worker to re-emit its final JSON verbatim; re-dispatching the work is the last resort. *(Verified 2026-07-23: three background workers all emitted correct contracts, but post-completion turns left "complete and delivered" prose in the final-message slot, so the notification carried nothing and the contract had to be regex-extracted from the transcript. Deliberately not automated — the recovery order is cheap to follow by hand and a resend ping costs less than a re-run.)*
 
 ### Worktree setup (per ticket)
 

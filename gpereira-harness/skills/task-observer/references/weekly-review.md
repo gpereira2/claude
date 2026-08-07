@@ -128,9 +128,21 @@ firing within the suppression window — a signal that the recurring need
 is real and the one-time decline was situational — the recommendation
 re-surfaces on the next firing.
 
-**Step 1 — Load observations and principles**
+**Step 1 — Archive prior-session resolutions, then load observations and principles**
 
-Read the observation log at `[workspace folder]/skill-observations/log.md`.
+**Archive first, before reading.** Move every ACTIONED or DECLINED entry that was
+resolved in a *previous* session into
+`[workspace folder]/skill-observations/archive/log-YYYY-MM-DD.md` (create the
+`archive/` directory if it does not exist), leaving the active log with its header,
+all OPEN entries, and any entries resolved in *this* session. The full mechanism,
+including the same-session safety check, is in the "Archival on Write" section of
+`references/observation-protocol-full.md` — read it before the first archival run.
+
+This step is stated here explicitly because the review reads only this file: an
+archival instruction that lives solely in the protocol reference never executes, and
+resolved entries accumulate in the active log indefinitely.
+
+Then read the observation log at `[workspace folder]/skill-observations/log.md`.
 Extract all observations with status OPEN. Also read
 `[workspace folder]/skill-observations/principles.md` and
 extract all active principles.
@@ -167,6 +179,8 @@ rename, or prune the sync) is a structural user decision, so report it in
 the summary rather than resolving it autonomously.
 
 **Step 3 — Cross-check observations against every skill**
+
+**Before re-recording any prior blocker, read the target.** An observation left OPEN because its target is outside this review's write boundary must have that target checked — one `grep` of the file — before the blocker is restated. "I cannot change it" is not "it has not been changed": someone else can edit a file you cannot, and three observations once sat OPEN across four consecutive reviews, with patch text staged for manual application, while the content was already merged upstream. Items held for a *user decision* are the highest-priority candidates for this check, not the lowest — escalating a question that no longer needs answering spends the user's attention on nothing.
 
 For each OPEN observation, evaluate whether it is relevant to each skill. Do
 NOT rely solely on the observation's own "Skill" field — observations may

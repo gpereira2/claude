@@ -174,6 +174,17 @@ overwriting it. Cowork's read-only mount, EROFS behaviour, and `present_files` d
 `references/cowork-environment.md`. Environments without persistent storage (handoff doc mode):
 `references/handoff-doc-mode.md`.
 
+**A skill reached through a plugin cache needs a port, and the port is per-hunk — never a `cp`.**
+Edits under `plugins/cache/.../<version>/skills/` are live immediately but transient: a marketplace
+whose source is a directory with `autoUpdate: true` rebuilds the cache from that repo and reverts
+them. So the edit must also reach the source repo. Write the handoff note (`skill-updates/DATE/APPLY.md`)
+naming the files and what changed — but do not prescribe a wholesale copy over the repo's version.
+The cache and the repo are **different lineages, not newer-versus-older**: the repo side can carry
+hunks the cache never had, and a `cp` silently deletes them. Diff the two first and state the result
+in the note; if the staged file is a verified strict superset, say so and why the copy is safe, and
+if it is not, hand over the individual hunks. Where a dedicated sync routine already owns that port,
+defer to it rather than issuing competing copy instructions.
+
 ## Principle Propagation
 
 When an observation reveals a principle that applies to skills in general, log it with
