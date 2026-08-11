@@ -64,7 +64,7 @@ Then **select a mode** — this is what makes the pipeline flexible. Ceremony sc
 | Mode | When | Pipeline |
 |---|---|---|
 | ⚡ **Quick** | Single small ticket: clear bugfix, copy change, config tweak, one-file change with an obvious approach | Skip Phases 1–3. One combined discovery+implement worker, one review worker, then Completion. 1–2 sub-agents total. |
-| 🚶 **Standard** | 1–3 tickets, clear acceptance criteria, single domain each | Light critical review (top 3–5 questions only, batched in one message). Plan by a single STANDARD-tier worker. Grouped execution with review gates. |
+| 🚶 **Standard** | 1–3 tickets, clear acceptance criteria, single domain each | Light critical review (top 3–5 questions only, batched in one message). Plan by a single DEEP-tier planner. Grouped execution with review gates. |
 | 🏗️ **Full** | Epics, 4+ tickets, cross-domain work, schema changes, ambiguous specs, anything irreversible | The complete pipeline below: dependency inference, full critical review, DEEP-tier plan + independent plan review, per-group gates, final review. |
 | 🔍 **Discovery** | No ticket, no code change; the deliverable is a findings/ideation **report** — a pain-point sweep, an audit, a spike | Parallel read-only discovery workers → main-loop synthesis → report saved to the vault (`$CTX/spikes/`). No plan approval, no execution, no gates, no PR. |
 
@@ -121,7 +121,9 @@ Fold resolved answers into ticket context before planning.
 
 Planning is done entirely by sub-agents.
 
-**Planner** (Full: DEEP tier · Standard: STANDARD tier):
+**Planner** (DEEP tier — in every mode that plans at all):
+
+The planner is never routed down to save money. Plan writing is a DEEP row in agent-selector's deterministic table, and *"deterministic before inferential — if a task matches the routing table, its tier is settled"* means mode does not re-litigate it. The mechanism: a planner runs **once**, and the workers it specifies run many times over — how precisely the plan names contracts, file scopes and verification is what decides whether those workers arrive at the answer or grope for it. Cheap workers are only viable downstream of an explicit plan, so a thinner plan is not a saving, it is a cost moved onto the fleet and multiplied. Standard mode earns its savings by dispatching fewer workers and fewer gates, never by thinking less about what they are told.
 1. Write the plan directly, covering: problem statement, approach, domain identification, task breakdown with ACs mapped, risks, and test strategy. Where the work can be carved more than one way, break it into **vertical slices** — tracer bullets, each independently demoable end-to-end — per agent-selector's Step 1, not horizontal layers.
 2. Run `agent-selector` to produce the task manifest (tasks, tiers, tools, dependencies, parallel groups).
 
@@ -218,7 +220,7 @@ Copy any local, uncommitted environment files the build needs into the worktree.
 
 - Groups run **sequentially by dependency**: database → backend → frontend → tests.
 - Within a group, dispatch independent tasks **in one batch** (single message, multiple Task calls) — max 3 concurrent.
-- Workers never integrate each other's output; the orchestrator sequences integration as its own tasks. Within a group, write sets must be disjoint — the worktree is per ticket, not per task, so two workers editing one file silently lose one set of edits.
+- Workers never integrate each other's output. Integration is **dispatched, never performed in the main loop** (Iron Rule 1): the orchestrator sequences it as its own task and sends it to a worker with fresh context, and never to either author — whoever wrote one side of a collision is the worst-placed agent to judge which side should win, because the reasoning that produced their version is exactly what they will re-apply. No named agent covers this shape yet: route it to `implementer` scoped to integration only, and flag the named-agent gap as a manifest follow-up. Within a group, write sets must be disjoint — the worktree is per ticket, not per task, so two workers editing one file silently lose one set of edits.
 - After each group: one status line (finished / remaining / issues).
 
 ### Review gate (after each group) — fast gate
@@ -231,15 +233,18 @@ Deterministic checks (tests pass, linter clean) come from exit codes, not the re
 
 **Treat every worker's `status`, `files_changed`, and `tests` fields as claims to verify, not facts.** At the gate, reconcile them against `git status --porcelain` (a worker reporting "1 file changed" when the tree shows 12 has misnarrated its work) and a first-party re-run of the test command — a sub-agent's "21 passed" is a claim until the gate reproduces it.
 
+**The worker was handed the commands it is graded on, so check for a gamed pass, not just a pass.** Delegation-contract item 6 gives every worker the exact test and lint invocations the gate will judge it by — which makes weakening the target a cheaper route to green than fixing the code. Have the reviewer confirm the diff did not soften assertions, add `skip`/`only`/`pending` markers, loosen a matcher to a tautology, widen an expected type, or quietly narrow the task's scope to whatever already passed. A suite that goes green because it now asks less is a regression the exit code cannot see.
+
 Blockers fixed before the next group. Suggestions → user.
 
 ### Failure escalation (cheap-first cascade)
 
 1. Retry once at **one effort step up on the same tier** (per agent-selector's cascade — effort climbs before tier, because most failures are under-thought rather than under-powered), including the failure summary and `tests.failure_tail` — not the full transcript — in the new prompt.
-2. Still failing → retry once at the next tier up, with effort reset to that tier's routed level.
-3. Second failure at the same tier after its effort step → escalate to the user with what was attempted and why it failed.
+2. **Re-specify once, before buying a bigger model** — but only on evidence that the *dispatch* was the defect: a `blocked` on a false premise, an `assumptions` array carrying a load-bearing guess, or a failure naming something the prompt never supplied (a contract, a path, a fixture). Rewrite the prompt and re-run the same rung. One planner inference is cheaper than a re-run a tier up, and an under-specified task fails identically at every tier. Skip this rung when the evidence shows a genuine capability failure — the approach itself is wrong — and climb instead.
+3. Still failing → retry once at the next tier up, with effort reset to that tier's routed level.
+4. Second failure at the same tier after its effort step → escalate to the user with what was attempted and why it failed.
 
-**Original tier → one upgrade → user. Never more than one retry.**
+**Original tier → effort step → re-specify (once, on dispatch-defect evidence only) → one tier upgrade → user.** One retry per rung, one re-specify per task; never a second of either.
 
 ### Final review (Full mode, per ticket) — deep gate
 
