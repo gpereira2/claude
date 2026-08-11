@@ -104,3 +104,62 @@ dangerous ones. Guards block or exit silently. Nothing else.
 Corollary: prefer a verdict shape you have **verified fires** in your own
 environment. An "ask" verdict is inert under auto-approving permission modes,
 so a guard relying on it blocks nothing while appearing to be installed.
+
+### 11. A test-time control only fakes the layer that reads it
+
+Faking a clock, a config value, or a piece of state controls exactly one
+process — the one that reads the faked value. It does not extend across a
+process boundary. A framework's test-clock helper rewrites the application's
+notion of "now"; the database's own wall-clock functions (`NOW()`,
+`CURRENT_TIMESTAMP`, `NOW() - INTERVAL …`) never see it, and neither do queue
+delays, cache TTLs, or timestamps minted by an external service. The test goes
+green while the asserted behaviour was never exercised.
+
+When a change straddles that boundary, name the divergence rather than trusting
+the green test: pass the faked value in as a parameter, do the comparison in the
+faked layer, or assert against absolute timestamps.
+
+Corollary — a green test is not evidence of one correct behaviour. Two
+independent defects can cancel out and read as correctness: in the originating
+case a real-time comparison would have taken the wrong branch, but an
+auto-created sibling row made the outer `IS NULL` false, so the test passed for
+neither intended reason. When a test passes on a path you have just changed,
+confirm it fails with the change reverted. *(Verified 2026-08-04.)*
+
+### 12. "I cannot change it" is not "it has not been changed"
+
+When a work item is blocked because its target lies outside your write
+boundary, the blocker justifies **not editing** — it never justifies assuming
+the target is unchanged. Someone else can change a file you cannot.
+
+Read the target before recording or re-recording a blocked status, and close the
+item if the content is already there. Three observations sat OPEN across four
+consecutive reviews, were escalated to the user as a pending decision, and had
+their patch text staged for manual application — all while the content was
+already merged upstream by someone else. One `grep` of the target file at any
+point would have closed all three. The check is cheap; the stall compounds,
+because each pass re-derives the same reasoning and re-asks the same question.
+
+Corollary: an item held for a *user decision* is the highest-priority candidate
+for this check, not the lowest. Escalating a question that no longer needs
+answering spends the user's attention on nothing and erodes the escalation
+channel. *(Verified 2026-08-04.)*
+
+### 13. A sub-agent's "no X exists" is a claim about its search, not about the codebase
+
+Negative existence findings are the most dangerous class of sub-agent output,
+because absence of evidence from a bounded search is indistinguishable in the
+report from evidence of absence. A worker that greps three plausible names and
+finds nothing reports the same sentence as a worker that proved the thing does
+not exist. Build a plan on it and a generically-named module that the search
+terms missed gets re-invented as a whole slice of duplicated infrastructure.
+
+Two rules follow. **Workers qualify negative claims** — any "no X exists" /
+"nothing handles Y" names the paths, globs and terms actually searched.
+**Consumers re-verify before building on one** — a plan element whose
+justification is a negative claim gets one first-party grep before a task is
+written against it.
+
+Structural-sharing claims ("both trees wrap the same component") sit in the same
+class: duplicated copies and a shared import are identical in a file listing,
+and the wrong reading changes the shape of the work. *(Verified 2026-08-07.)*
