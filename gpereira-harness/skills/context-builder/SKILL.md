@@ -79,6 +79,8 @@ grep -r "TODO\|FIXME\|HACK" --include="*.php" --include="*.ts" --include="*.js" 
 
 ## Step 3: Decide Which Folders Need AGENTS.md
 
+First check the project's own convention: if the repo standardises on folder-level `CLAUDE.md` files — its root `CLAUDE.md` or `AGENTS.md` will say so — create folder context as `CLAUDE.md` instead of `AGENTS.md`. Everything below still applies; only the filename changes.
+
 Not every folder needs one. Create AGENTS.md in a folder when it has:
 - Non-obvious conventions or patterns
 - Its own build/test commands
@@ -216,10 +218,24 @@ cat > path/to/AGENTS.md << 'EOF'
 [approved content]
 EOF
 
-echo "✅ Written: path/to/AGENTS.md"
+# Gate the success line on the write, then read the file back — never announce
+# a write you have not confirmed landed.
+if [ -s path/to/AGENTS.md ] && head -1 path/to/AGENTS.md | grep -q '^# '; then
+  echo "✅ Written: path/to/AGENTS.md ($(wc -l < path/to/AGENTS.md) lines)"
+else
+  echo "❌ FAILED: path/to/AGENTS.md — not written or empty"
+fi
 ```
 
-Then report:
+Confirm through a second channel before reporting — the file listing alone is the same
+channel that just wrote it:
+
+```bash
+git status --short -- '*AGENTS.md'
+```
+
+Then report — counts come from the read-back and `git status`, not from the number of
+files you intended to write. If any file failed its check, say which and stop:
 ```
 ✅ Written 3 files:
 - AGENTS.md (root)
