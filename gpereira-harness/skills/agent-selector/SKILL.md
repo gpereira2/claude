@@ -143,10 +143,12 @@ The default quality mechanism is **cheap-first, escalate-on-failure** — it cos
 **Climb effort before tier.** With two axes the ladder has twice the rungs at a fraction of the cost — raising effort on the same model is far cheaper than jumping a model family, and it fixes most failures, which are under-thought rather than under-powered:
 
 ```
-LIGHT/low → LIGHT/medium → STANDARD/medium → STANDARD/high → DEEP/high → DEEP/xhigh → FRONTIER → human
+LIGHT/low → LIGHT/medium → [re-specify once] → STANDARD/medium → STANDARD/high → DEEP/high → DEEP/xhigh → FRONTIER → human
 ```
 
 Rule: **one effort step up first; only if that also fails, step up a tier** (resetting effort to that tier's routed level). One retry per rung, carrying a ≤150-word failure summary plus the returned `tests.failure_tail` evidence (never the failed transcript). Two failures at the same tier *after* its effort step → human. This cascade is shared with the orchestrator's failure-escalation rules — do not define a different one.
+
+**Re-specify before you re-tier.** Before any tier climb, ask what the returned evidence actually indicts — the model, or the prompt. When it points at the dispatch, rewrite the prompt and re-run the *same* rung: an under-specified task fails identically at every tier, so buying a bigger model just pays more for the same miss. The tells are specific — `status: "blocked"` on a false premise, an `assumptions` array carrying a guess the task turned on, or a failure that names a contract, path or fixture the prompt never supplied. Re-specify **at most once per task**, and only on that evidence; when the evidence shows the approach itself is wrong rather than under-described, skip the rung and climb. This is the cheapest rung on the ladder and the most often skipped, because a failure reads as weakness in the worker long before it reads as vagueness in the instruction.
 
 ## Dual-Inference (exceptional — strict entry criteria)
 
@@ -197,7 +199,7 @@ Always produce the manifest and show it for confirmation before spawning anythin
 **Routing**: {n} deterministic, {n} judgement-routed (reasons above), {n} dual-inference (user-approved)
 **Effort**: {n} `low`, {n} `medium`, {n} `high`, {n} `xhigh` — reasons given for anything above `medium`
 **Agents**: every row names its agent; tasks left on `general-purpose` are listed with a one-line reason (and a named-agent follow-up if the shape recurs)
-**Cost note**: [qualitative — e.g. "~70% of tasks on LIGHT/STANDARD vs an all-DEEP baseline"]
+**Cost note**: counted from the rows above, never estimated — e.g. "8 tasks: 3 LIGHT / 4 STANDARD / 1 DEEP; effort 5 `low` / 2 `medium` / 1 `high`". Both columns are already in the manifest, so this is arithmetic, and it turns the routing doctrine into something a finished run can be audited against instead of a claim. A qualitative gesture ("mostly cheap tiers") cannot be checked and hides the case where a fleet quietly drifted upward.
 ```
 
 Rules:
