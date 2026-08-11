@@ -11,6 +11,7 @@ Discipline:
 - **Independent expected values.** The expected value comes from a known-good literal, a worked example, or the spec — never recomputed the way the code computes it. A test that recomputes its own answer passes by construction and can never disagree with the code.
 - **Vertical slices when driving new behaviour.** One test → just enough code to pass it → the next, each slice informed by the last. Don't batch every test up front: bulk tests check imagined behaviour and go numb to real changes.
 - **Mock only at system boundaries** — external APIs, time, randomness, sometimes the DB (prefer a test DB). Never mock your own collaborators.
+- **A faked clock stops at the process boundary** (principle #11). A test-clock helper rewrites the application's "now" and nothing else — the database's own wall-clock functions (`NOW()`, `CURRENT_TIMESTAMP`), queue delays, cache TTLs and externally-minted timestamps never see it. When the code under test compares dates in another layer, pass the faked value in as a parameter, do the comparison in the faked layer, or assert against absolute timestamps. And when a test passes on a path you just changed, confirm it fails with the change reverted — two defects can cancel out and read as green.
 
 Rules:
 - Work ONLY inside the given $TICKET_WORKTREE, only on test files and factories/fixtures for the stated scope.
