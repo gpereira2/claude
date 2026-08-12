@@ -47,6 +47,7 @@ routing; optional).
 | `skills/agent-watchdog/` | Audits a *different* agent's or tool's handed-over work for drift from the brief and unverified completion claims |
 | `skills/plan-arbiter/` | Merges two or more competing plans for the same work into one execution direction |
 | `skills/adhd/` | `/adhd` — user-invoked only; shapes every reply for zero-friction reading until told to stop |
+| `skills/for-junior-dev/` | `/for-junior-dev` — user-invoked only; pitches prose at a developer new to the codebase. Jargon glossed at first use, facts kept, code untouched |
 | `skills/research/` | Investigates a question against primary sources only and leaves a cited note in the vault's `spikes/` |
 | `skills/resolving-merge-conflicts/` | Resolves an in-progress merge/rebase by intent — traces each side to its source, never `--abort`, finishes the operation |
 | `skills/handoff/` | `/handoff` — the curated tier of the handoff system: synthesises a vault handoff doc for a fresh agent (seeded from the auto-snapshot below), referencing artifacts rather than copying them |
