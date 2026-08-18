@@ -97,6 +97,20 @@ DENY = [
      "raw destructive SQL from a shell is forbidden — hand the SQL to the user"),
     (r"artisan\s+(migrate:fresh|migrate:refresh|db:wipe)\b",
      "drops tables and destroys database data — forbidden from agent sessions"),
+    # Ported from the live user-level config 2026-08-18, where it had run in
+    # settings.json as three greps over the whole command string. Rewritten as one
+    # clause-anchored regex because this guard splits clauses and strips heredocs
+    # first — the whole-string form false-positives on any command that merely
+    # quotes the text (it blocked a heredoc test fixture during the port).
+    # `down` is load-bearing: -v on `docker run` is a volume *mount*, not a delete.
+    # Covers `docker compose` and legacy `docker-compose`, flags before the
+    # subcommand (-f foo.yml), and bundled short flags (-tv). Deliberately not
+    # covered: -v preceding `down`, which is not valid for this subcommand.
+    # Known imprecision: a word-bounded "down" inside a filename plus a later -v
+    # denies — accepted, since the failure direction is a clear block, not a
+    # silent volume delete.
+    (r"^docker(-compose|\s+compose)\b.*\bdown\b.*(\s-\w*v\b|\s--volumes\b)",
+     "compose down with volumes deletes named volumes (database data) — drop the flag, or run it manually if truly intended"),
 ]
 
 
