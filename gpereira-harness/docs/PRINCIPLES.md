@@ -163,3 +163,44 @@ written against it.
 Structural-sharing claims ("both trees wrap the same component") sit in the same
 class: duplicated copies and a shared import are identical in a file listing,
 and the wrong reading changes the shape of the work. *(Verified 2026-08-07.)*
+
+### 14. A scope parameter is advisory when the server's scope is its session
+
+An external-surface tool backed by a running application — an IDE, a browser, a
+desktop client — serves only what that application currently has open. A path,
+project, or workspace argument on such a tool is a **selector among what is
+already attached**, not an instruction to attach something new. Pass one the
+server cannot resolve and the call does not error: it silently answers from the
+attached scope instead, so structural lookups return real, well-formed results
+that describe a **different** copy of the code than the one being edited.
+
+This is the failure mode that makes it dangerous: the wrong answer is
+indistinguishable from the right one. Only the emptiness of an adjacent call
+("which files are open?" returning none) hints that the scope never took.
+
+Two rules follow. **Establish the attached scope once, before relying on any
+such tool** — one cheap call that would come back empty if the scope were
+wrong — and treat every later result as belonging to that scope. **Never let a
+question that depends on uncommitted local edits go to one of these tools**;
+structural questions (hierarchies, call graphs, route or model metadata) are
+scope-insensitive and safe, verdicts about your working copy are not. Switching
+the tool's transport does not change this — a stdio bridge to a running
+application is still that application. *(Verified 2026-08-13.)*
+
+### 15. Parallelism is only free when workers share no mutable resource
+
+A shared test database rebuilt per run (`migrate:fresh` or equivalent) is a
+mutable shared resource: run two test workers against it concurrently and they
+serialize on it whether you intend it or not, and the failure surfaces as
+spurious lock-wait timeouts and deadlocks on unrelated, untouched tests — not
+as an obvious contention error. Serialize test workers that rebuild a shared
+schema, or give each an isolated one; parallel dispatch is safe only for
+read/analysis workers or workers with isolated databases.
+
+The second half of the trap: a test tool's DB isolation does not extend to
+ad-hoc commands a worker might run. A bare framework CLI does not read the
+test suite's env overrides — `php artisan migrate --env=testing` resolves the
+database from the ambient environment, not from `phpunit.xml`, and lands on
+the shared app database. Dispatch prompts for test workers must name the one
+sanctioned test command and forbid ad-hoc migration commands outright.
+*(From the 2026-08-14 parallel test-writer race, Observation 20.)*

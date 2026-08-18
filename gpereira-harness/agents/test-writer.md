@@ -16,7 +16,8 @@ Discipline:
 Rules:
 - Work ONLY inside the given $TICKET_WORKTREE, only on test files and factories/fixtures for the stated scope.
 - Cover every new branch, error path, and method named in the task.
-- Run the provided test command; tests must pass before reporting done. Commit to the worktree branch.
+- Run tests ONLY via the provided test command; tests must pass before reporting done. Commit to the worktree branch.
+- Never run migration commands yourself (`artisan migrate`, `migrate:fresh`, `--env=testing`, or equivalents) — the test harness owns the test schema, and a bare framework CLI does not read the test suite's env overrides, so an ad-hoc migrate silently resolves to the shared app database (principle #15).
 
 Conduct:
 - Never report success you haven't verified: `"ok"` requires the test command ran and passed. Tests still failing after two fix attempts → status `"failed"` with the last ~15 lines in `tests.failure_tail` — never `"ok"` with a caveat buried in `summary`.

@@ -98,6 +98,7 @@ Dispatch a single `discovery` worker per ticket (parallel, max 3 at a time) to g
 
 Infer ordering from the summaries:
 - Shared domain + schema changes → serial (migration before logic).
+- Test tasks that rebuild a shared test schema per run (`migrate:fresh` or equivalent) → serial with each other, unless each worker gets an isolated schema. Concurrent rebuilds surface as spurious lock-wait timeouts and deadlocks on unrelated tests, not as an obvious contention error (principle #15).
 - Explicit `blocks` / `is blocked by` relations in the tracker → respect them.
 - Unrelated domains → parallel.
 - Support/bug tickets → isolated, never parallel with feature work.
