@@ -31,8 +31,7 @@ jq -e . "$ROOT/hooks/hooks.json" >/dev/null || fail "hooks.json invalid"
 for f in agent-dispatch-conduct-gate.sh subagent-contract-gate.sh subagent-trace.sh \
          subagent-trace-summary.sh precompact-handoff.sh sessionstart-handoff.sh \
          storage-root-hint.sh plan-persist-context.sh docs-location-guard.sh \
-         secret-scan-guard.py bash-clause-guard.py credential-file-guard.py \
-         pr-context-hint.sh php-convention-lint.sh; do
+         pretooluse-guard.py pr-context-hint.sh php-convention-lint.sh; do
   [ -f "$ROOT/hooks/$f" ] || fail "missing hook: $f"
   [ -x "$ROOT/hooks/$f" ] || fail "hook not executable: $f"
 done
@@ -41,36 +40,21 @@ done
 for f in "$ROOT"/hooks/*.sh; do bash -n "$f" || fail "bash syntax error: $f"; done
 command -v python3 >/dev/null 2>&1 && { python3 -m py_compile "$ROOT"/hooks/*.py || fail "python syntax error in hooks"; }
 
-# 7. guard hooks make the right decision (behavioural, not just syntax)
-echo '{"tool_input":{"command":"x && rm -rf ~"}}' | python3 "$ROOT/hooks/bash-clause-guard.py" \
-  | jq -e '.hookSpecificOutput.permissionDecision=="deny"' >/dev/null || fail "bash-guard did not deny rm -rf ~"
-echo '{"tool_input":{"command":"ls -la"}}' | python3 "$ROOT/hooks/bash-clause-guard.py" \
-  | grep -q . && fail "bash-guard should be silent on a safe command" || true
-# compose teardown: only the volume-deleting form is denied. Stopping containers
-# without -v is routine, so the silence case is the one that must not regress.
-echo '{"tool_input":{"command":"docker compose down -v"}}' | python3 "$ROOT/hooks/bash-clause-guard.py" \
-  | jq -e '.hookSpecificOutput.permissionDecision=="deny"' >/dev/null \
-  || fail "bash-guard did not deny compose down with volumes"
-echo '{"tool_input":{"command":"docker compose down"}}' | python3 "$ROOT/hooks/bash-clause-guard.py" \
-  | grep -q . && fail "bash-guard should be silent on compose down without volumes" || true
-
-# credential-file-guard: blocks credential reads across every content-returning tool,
-# including Grep (which is NOT covered by a Read|Edit|Write matcher yet prints file content).
-python3 "$ROOT/hooks/credential-file-guard.test.py" >/dev/null || fail "credential-file-guard unit cases failed"
-for TOOL_JSON in '{"tool_name":"Read","tool_input":{"file_path":"/repo/auth.json"}}' \
-                 '{"tool_name":"Grep","tool_input":{"pattern":"x","path":"/repo/.npmrc"}}' \
-                 '{"tool_name":"Bash","tool_input":{"command":"cat /repo/auth.json"}}'; do
-  echo "$TOOL_JSON" | python3 "$ROOT/hooks/credential-file-guard.py" \
-    | jq -e '.decision=="block"' >/dev/null || fail "credential-guard failed to block: $TOOL_JSON"
-done
-echo '{"tool_name":"Read","tool_input":{"file_path":"/repo/composer.json"}}' \
-  | python3 "$ROOT/hooks/credential-file-guard.py" | grep -q . \
-  && fail "credential-guard should be silent on a normal file" || true
-
-# secret-scan-guard: default posture is a hard block, not an unreliable "ask".
+# 7. guard hook makes the right decision (behavioural, not just syntax).
+#    pretooluse-guard.py merges the former bash-clause / credential-file /
+#    secret-scan guards into one spawn; the unit file covers all three domains.
+python3 "$ROOT/hooks/pretooluse-guard.test.py" >/dev/null || fail "pretooluse-guard unit cases failed"
+echo '{"tool_input":{"command":"x && rm -rf ~"}}' | python3 "$ROOT/hooks/pretooluse-guard.py" \
+  | jq -e '.hookSpecificOutput.permissionDecision=="deny"' >/dev/null || fail "guard did not deny rm -rf ~"
+echo '{"tool_input":{"command":"ls -la"}}' | python3 "$ROOT/hooks/pretooluse-guard.py" \
+  | grep -q . && fail "guard should be silent on a safe command" || true
+echo '{"tool_name":"Grep","tool_input":{"pattern":"x","path":"/repo/.npmrc"}}' \
+  | python3 "$ROOT/hooks/pretooluse-guard.py" \
+  | jq -e '.decision=="block"' >/dev/null || fail "guard failed to block a Grep of .npmrc"
+# secret scan: default posture is a hard block, not an unreliable "ask".
 printf '{"tool_input":{"file_path":"/tmp/x","content":"AKIA%s"}}' "0000000000000000" \
-  | python3 "$ROOT/hooks/secret-scan-guard.py" | jq -e '.decision=="block"' >/dev/null \
-  || fail "secret-scan-guard did not block key material by default"
+  | python3 "$ROOT/hooks/pretooluse-guard.py" | jq -e '.decision=="block"' >/dev/null \
+  || fail "guard did not block key material by default"
 
 # 8. leak gate — no company-internal references in shareable content.
 #    Scans prose/config/hooks/routines; lib/ is excluded because it legitimately

@@ -78,9 +78,7 @@ Plugin-scoped and endpoint-free — they wire into your session via
 | `subagent-contract-gate.sh` | SubagentStop | Validates a worker's final message is honest contract JSON (fail-open) |
 | `subagent-trace.sh` | SubagentStart/Stop | Appends a JSONL audit trace of every subagent to the vault |
 | `subagent-trace-summary.sh` | (CLI helper) | Renders a markdown summary table from a trace file |
-| `bash-clause-guard.py` | PreToolUse(Bash) | Deny-only guard: decomposes compound commands, blocks catastrophic clauses |
-| `secret-scan-guard.py` | PreToolUse(Write\|Edit) | **Blocks** writing content that looks like real credentials. Set `SECRET_SCAN_GUARD_MODE=ask` for the soft posture — but see the note below before relying on it |
-| `credential-file-guard.py` | PreToolUse(Read\|Edit\|Write\|Grep\|Glob\|NotebookEdit\|Bash) | Hard-blocks reads of `auth.json`, `.env*` (bar `.example`/`.sample`/`.template`/`.dist`), `.npmrc`, `netrc`, and `*.pem`, on both file-path and shell-command inputs |
+| `pretooluse-guard.py` | PreToolUse(Read\|Edit\|Write\|Grep\|Glob\|NotebookEdit\|Bash) | Single-spawn safety guard merging three checks: deny-only bash clause decomposition (blocks catastrophic clauses inside compound commands), hard-blocks reads of `auth.json`, `.env*` (bar `.example`/`.sample`/`.template`/`.dist`), `.npmrc`, `netrc`, and `*.pem` on both file-path and shell-command inputs, and **blocks** writing content that looks like real credentials (set `SECRET_SCAN_GUARD_MODE=ask` for the soft posture — but see the note below before relying on it) |
 | `pr-context-hint.sh` | SessionStart | Injects the current branch's PR state — number, draft, CI rollup, review decision, mergeability — via read-only `gh`. Skips default branches; fails open |
 | `context-status.sh` | statusline filter | Writes raw per-session context data for an external dashboard and passes stdin through. Not wired by `hooks.json` — pipe it before your statusline command |
 | `precompact-handoff.sh` | PreCompact | Automatic tier of the handoff system: snapshots in-flight state to the vault's `handoffs/auto/` before compaction |
@@ -97,8 +95,8 @@ Plugin-scoped and endpoint-free — they wire into your session via
 "ask"` to approve with no prompt shown. A guard built on "ask" then blocks
 nothing while appearing installed. Verified in one such environment: a write
 containing a clean match for the AWS-key pattern completed with no prompt and no
-block. That is why `secret-scan-guard.py` now defaults to a hard block and
-`credential-file-guard.py` only ever emits `{"decision": "block"}`.
+block. That is why `pretooluse-guard.py`'s secret scan defaults to a hard block
+and its credential-file check only ever emits `{"decision": "block"}`.
 
 **A guard must never emit an explicit *approve*.** Approving the inputs it does
 not care about does not merely pass the call — it short-circuits the permission
@@ -108,7 +106,7 @@ command in its scope. These hooks block, or exit silently. Nothing else.
 
 **Matcher coverage is not obvious.** `Grep` prints file content but is *not*
 matched by `Read|Edit|Write` — a credential guard wired only to those three
-leaves an open channel. `credential-file-guard.py` therefore matches the full
+leaves an open channel. `pretooluse-guard.py` therefore matches the full
 set of content-returning tools. Its `*.pem` rule is deliberately path-only:
 matching `.pem` inside shell commands also caught legitimate local-TLS
 certificate tooling, for no security gain, since the vector is *reading* a key.

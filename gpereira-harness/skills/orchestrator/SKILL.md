@@ -70,7 +70,7 @@ Then **select a mode** — this is what makes the pipeline flexible. Ceremony sc
 
 Worker-count rules (mirror these when sizing a run): 1 worker for a simple lookup or fix; 2–4 workers for a standard ticket (discovery, implement, test, review); a full manifest via agent-selector only for Full mode.
 
-State the chosen mode in one line and proceed. The user can override ("run this as Full"). **Default down, escalate up**: if a Quick run surfaces unexpected complexity (schema change, cross-domain import, ambiguous AC), stop and escalate the mode — never push through.
+State the chosen mode in one line and proceed. In Quick mode, that line also names the intended worker and is the run's single approval — wait for a yes here, because no plan phase follows to catch it. The user can override ("run this as Full"). **Default down, escalate up**: if a Quick run surfaces unexpected complexity (schema change, cross-domain import, ambiguous AC), stop and escalate the mode — never push through.
 
 **Discovery mode** skips the entire ticket-execution spine. Dispatch parallel read-only workers (built-in `Explore`, or the `discovery` agent at STANDARD tier for convention-sensitive sweeps), each returning a findings array; synthesise in the main loop; save the report to `$CTX/spikes/`. Findings return contract:
 
@@ -81,8 +81,6 @@ State the chosen mode in one line and proceed. The user can override ("run this 
 ---
 
 ## Phase 1: Dependency Inference & Execution Order *(Standard: abbreviated · Full: complete)*
-
-**Requires user approval before proceeding.**
 
 Dispatch a single `discovery` worker per ticket (parallel, max 3 at a time) to gather context — the orchestrator does not fetch these itself beyond the initial ticket read.
 
@@ -103,7 +101,7 @@ Infer ordering from the summaries:
 - Unrelated domains → parallel.
 - Support/bug tickets → isolated, never parallel with feature work.
 
-Present the execution plan (Parallel Group A / Serial after A / Isolated) and wait for explicit approval.
+Record the execution order (Parallel Group A / Serial after A / Isolated) — it goes into the plan and is approved with it at the single approval gate in Phase 3, not separately here. Do not stop for approval in this phase.
 
 ---
 
@@ -169,13 +167,13 @@ Update `ticket.json` after every group and gate. The vault ticket folder is the 
 
 **Plan Reviewer** (Full mode only, DEEP tier, fresh context): every AC maps to a task; critical-review answers reflected; tier assignments sane; parallel groups have no hidden dependencies; no scope creep. Blockers → planner re-runs with feedback. Suggestions → user decides.
 
-Move ticket(s) to In Progress after plan approval.
+**Single approval gate — the run's only stop.** Present the plan (including the Phase 1 execution order) for one approval. Once approved, the pipeline runs to completion without further approval stops: groups dispatch automatically, gates halt only on failure. Move ticket(s) to In Progress after plan approval.
 
 ---
 
 ## Phase 4: Execution
 
-**Approval before each task group** (Quick mode: single approval for the whole run).
+**No per-group approvals.** The plan approval (Phase 3) covers every group; in Quick mode — which skips Phases 1–3 — state the mode and intended worker in one message and take a single approval there instead. Groups proceed automatically in dependency order. The pipeline stops mid-run only when a gate fails, the escalation cascade exhausts, or a Quick run escalates its mode — never to ask permission for the next group.
 
 ### Delegation contract — every dispatched worker prompt MUST contain all eight
 
@@ -285,13 +283,15 @@ This is the slow, thorough pass — it runs **once per ticket, after all groups 
 
 ## Quick Reference
 
+One approval per run: the plan (Standard/Full) or the mode statement (Quick). Everything else runs on deterministic gates.
+
 | Phase | Quick | Standard | Full | Approval gate |
 |---|---|---|---|---|
-| 0 — Normalise + mode | ✅ | ✅ | ✅ | If free-form input |
-| 1 — Dependency inference | — | abbreviated | ✅ | ✅ |
-| 2 — Critical review | — | top 3–5 Qs | full | ✅ (Full) |
-| 3 — Plan + review | — | planner only | planner + reviewer | ✅ |
-| 4 — Execution | 1 worker | grouped | full manifest | ✅ per group |
+| 0 — Normalise + mode | ✅ | ✅ | ✅ | Quick: whole-run approval here; others: confirm free-form input only |
+| 1 — Dependency inference | — | abbreviated | ✅ | — (folded into plan) |
+| 2 — Critical review | — | top 3–5 Qs | full | blocker Q&A only (Full) |
+| 3 — Plan + review | — | planner only | planner + reviewer | ✅ the run's single approval |
+| 4 — Execution | 1 worker | grouped | full manifest | — (auto-proceeds) |
 | 4x — Fast gate | 1 reviewer | ✅ per group | ✅ per group | blockers only |
 | 4y — Deep gate | — | — | ✅ once per ticket | blockers only |
 | 5 — Completion | ✅ | ✅ | ✅ | — |

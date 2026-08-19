@@ -8,21 +8,9 @@
         ]
       },
       {
-        "matcher": "Bash",
-        "hooks": [
-          { "type": "command", "command": "python3 \"${CLAUDE_PLUGIN_ROOT}\"/hooks/bash-clause-guard.py" }
-        ]
-      },
-      {
-        "matcher": "Write|Edit",
-        "hooks": [
-          { "type": "command", "command": "python3 \"${CLAUDE_PLUGIN_ROOT}\"/hooks/secret-scan-guard.py" }
-        ]
-      },
-      {
         "matcher": "Read|Edit|Write|Grep|Glob|NotebookEdit|Bash",
         "hooks": [
-          { "type": "command", "command": "python3 \"${CLAUDE_PLUGIN_ROOT}\"/hooks/credential-file-guard.py" }
+          { "type": "command", "command": "python3 \"${CLAUDE_PLUGIN_ROOT}\"/hooks/pretooluse-guard.py" }
         ]
       },
       {
