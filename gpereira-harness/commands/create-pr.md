@@ -24,7 +24,11 @@ The local ref is tried first (no network, works in a worktree); `gh` is the auth
 - Never commit, `git push`, or `gh pr ready` without an explicit go for that specific step — and never `--force`.
 - Never mention Claude or AI co-authorship anywhere in the title or body.
 - Never invent a ticket. If the branch carries none, the title prefix is `[NO-TICKET]`.
-- Use the headings `## What`, `## Why`, `## How`, `## Test` (and `## Scope` when relevant).
+- Use the headings `## What`, `## Why`, `## How`, `## Test` (and `## Scope` when relevant) — unless the repo ships a PR template, which wins (Step 3).
+- The body carries intent and approach. GitHub already renders the file list and the diff, so never inventory files or narrate the diff line by line.
+- Tests earn a mention only as signal CI does not already show — a specific behaviour now covered, or a deliberate gap. A bare count ("14 tests passing") is noise.
+- `## Risks` appears only when the user raised a concern or the template asks for one. Never speculate.
+- When the *why* is not established by the session, ticket or commits, ask one open question. Offering candidate reasons or a pre-written draft invents the answer the user then ratifies.
 
 **Arguments:** "$ARGUMENTS" — empty → derive from branch + commits; a ticket key (e.g. `ABC-1234`) → override the branch-derived ticket; anything else → a hint for the title description.
 
@@ -53,6 +57,21 @@ git diff "$BASE"..HEAD --name-only
 ```
 
 If `$BASE` equals `HEAD`, abort ("nothing to PR: branch has no commits ahead of the base"). Classify the diff as **backend-only**, **frontend/mixed**, or **config-only** — this drives the Test section.
+
+**Reconcile the diff against the intent** before writing a word of the body:
+
+- Files outside what the session or ticket called for → stop and surface them; ask whether to proceed, split them out, or drop them.
+- Intended changes absent from the diff → surface that too; a PR that silently does less than it claims is the costlier direction.
+
+`## How` describes the diff in front of you, not the plan you set out with.
+
+**Detect a PR template** — a repo that ships one has already decided its structure:
+
+```bash
+find .github -maxdepth 2 -iname "*pull_request_template*" 2>/dev/null
+```
+
+If one exists it replaces the default headings: fill its sections, leave checkboxes unchecked unless you know they are done, and write `N/A` where there is nothing real to say. Keep the ticket reference line regardless.
 
 ## Step 4 — Title
 
@@ -83,6 +102,20 @@ Variations:
 - **Backend-only** → `## Test` is `Automated tests added.` (name the key regression test if it sharpens the picture). Omit `## Scope` unless there's real blast radius.
 - **Frontend / mixed** → `Automated tests added.` + a short numbered manual walkthrough (the flow to click through, what to confirm), and ask for a screenshot/recording on the PR.
 - **Config-only** → `Automated tests added: N/A — <one-line reason>.` + numbered manual verification steps with exact commands.
+
+**GitHub rendering:** one unwrapped line per paragraph — GitHub turns single newlines into line breaks, so column-wrapped prose snaps mid-sentence. Blank line between paragraphs, one bullet per line. `#42` in prose auto-links to issue 42; rephrase if you mean the number.
+
+**Diagrams — when structure moved and prose would be worse.** A mermaid block earns its place when the change rearranges components, flows or states; it is noise on a single-file fix. Skip it for bug fixes that left the workflow intact, dependency bumps, docs-only changes, and refactors with no structural change.
+
+| What changed | Block |
+|---|---|
+| New service, module, or dependency wiring | `graph TB` / `graph LR` |
+| API call path or multi-step workflow | `sequenceDiagram` |
+| Schema or model relationships | `classDiagram` |
+| Status or lifecycle transitions | `stateDiagram-v2` |
+| Branching decision logic | `flowchart TD` |
+
+Draw only what changed, label nodes with real identifiers from the diff, and include just enough surrounding context to place them. Mark new components with `:::new` and a `classDef new fill:#90EE90,stroke:#006400` line rather than redrawing the system. Two focused diagrams beat one crowded one.
 
 Content guidance: concise within each section; a one-line fix gets a one-line What/Why/How. Plain, approachable language — name identifiers but explain cause and fix in plain terms. British English, no emoji, no "this PR does X" preamble, no Claude mentions. End with a bold **Follow-ups (not in this PR):** line when there's deliberately-deferred work.
 
