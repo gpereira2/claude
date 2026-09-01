@@ -204,3 +204,79 @@ database from the ambient environment, not from `phpunit.xml`, and lands on
 the shared app database. Dispatch prompts for test workers must name the one
 sanctioned test command and forbid ad-hoc migration commands outright.
 *(From the 2026-08-14 parallel test-writer race, Observation 20.)*
+
+### 16. A two-step convention drifts wherever the second step is not load-bearing
+
+When a convention requires two writes and only the first is load-bearing at
+write time, the second decays silently — and the missing half is invisible
+precisely when it matters. An audit of one memory store found 12 of 141 files
+with no pointer line in the index that is loaded each session, so they were
+unreachable; separately, 28 cross-links pointed at nothing, because link keys
+were written against a `name:` field that had drifted from the filename. Neither
+failure surfaces at write time, so both accumulate until something forces an
+audit.
+
+Three fixes, in order of preference. **Fuse the steps**, so the index line is
+part of the artefact write rather than a follow-up. **Derive the second from the
+first**, so divergence is impossible — a link key that *is* the filename stem
+cannot disagree with it, whereas a parallel field eventually always will.
+Failing both, **add a cheap scheduled integrity check**: files-not-in-index,
+index-entries-with-no-file and links-with-no-target are three set comparisons
+that catch every drift mode at once.
+
+Deliberately left out: any fix to the memory-writing protocol that produced the
+drift, which lives in the platform's own prompt rather than in an editable
+skill. This lands as a rule for skills that *define* a paired write, not as a
+repair of that one protocol. *(From Observation 46, verified 2026-08-21.)*
+
+### 17. Silence from a read is not confirmation
+
+An empty tool result is a **failed read, never a confirmation** — the read-side
+dual of #2. A result reading "tool ran without output or errors" returned no
+bytes, so nothing said about the target afterwards is sourced from it. In the
+originating session a run of empty reads was treated as successful, and the user
+was told "Confirmed" for one claim restated from a third-party triage comment
+and another that was simply invented. Both later proved true when re-read
+through a different mechanism — which is luck, not verification, and the
+transcript would have looked identical either way.
+
+Two rules follow. Any verification step whose failure mode is **silence** needs
+an explicit "did this return anything?" check before its result is used; on
+empty output, retry through a different mechanism before making any claim about
+the target's contents. And never launder a third-party claim — a triage comment,
+an error-tracker summary, a prior ticket — into "confirmed" without a
+first-party read that returned bytes. *(From Observation 47, verified
+2026-08-21.)*
+
+### 18. Establish the capability boundary before spending the analysis on it
+
+#14 asks whether a tool answered from the right scope; this one asks whether the
+tool will let you *act* at all. The distinction matters because a capability
+limit surfaces at the **last** step: the investigation is sound, the fix is
+narrowed to one correct statement, and only then does the channel turn out to be
+read-only. Nothing about the analysis was wrong — it was simply spent before
+anyone checked it could be landed.
+
+Three shapes recur. A **data channel** that reads fine and refuses to write. A
+**tool or guard** that blocks the one read the question depends on, leaving that
+question open. A **delivery channel** — chat, notification, ticket comment —
+that is unauthorised, or that has no surface at all in a scheduled or headless
+run, so a finished report reaches nobody.
+
+Three rules follow. **Probe the verb you intend to end on, not the one you start
+with**: a successful read says nothing about write authority, so treat every
+external data channel as read-only until proved otherwise. **Preflight the
+dependent capability before the work that depends on it**, in one cheap call,
+and say plainly that it failed rather than discovering it at the point of use.
+**Make the artefact the deliverable and the delivery best-effort** — write the
+report, the statement or the patch to disk first, then attempt the channel, so a
+blocked final step costs the delivery and never the analysis.
+
+The degraded path is designed, not improvised. Where a boundary cannot be
+established cheaply, plan from the start to hand the user something they can act
+on themselves — the exact statement to run, the file to open — so "I am not
+permitted to do this" still ends in a usable result. *(From the 2026-09-01 usage
+review: a production data fix narrowed to one correct statement against a
+read-only source and never applied, a guard-blocked config read that left its
+question unresolved, and three completed scheduled runs that failed only at
+delivery.)*

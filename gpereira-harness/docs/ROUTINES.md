@@ -59,3 +59,13 @@ Copy `routines/weekly-skill-observation-review/SKILL.md` as a template:
 - Read-only routines must say so loudly and take no destructive action.
 - Reference paths relative to `~/.claude/` or the context vault, never absolute
   machine paths, so the routine travels between machines.
+- Write the artefact before you deliver it. The report lands in the context
+  vault first; posting, DM-ing or notifying is a **best-effort second step**. A
+  delivery failure downgrades the run to "delivered nowhere", never to "failed".
+  A scheduled session has no GUI and may have no authorised chat surface at all,
+  so a routine whose only output is a message it could not send has lost the
+  whole run (principle #18).
+- Preflight what the routine depends on in its first step — the data channel it
+  queries, the surface it will deliver to — and report what is available before
+  doing the analysis, so a missing capability costs one step rather than the
+  entire run.
