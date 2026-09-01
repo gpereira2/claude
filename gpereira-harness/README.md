@@ -52,6 +52,8 @@ routing; optional).
 | `skills/resolving-merge-conflicts/` | Resolves an in-progress merge/rebase by intent — traces each side to its source, never `--abort`, finishes the operation |
 | `skills/handoff/` | `/handoff` — the curated tier of the handoff system: synthesises a vault handoff doc for a fresh agent (seeded from the auto-snapshot below), referencing artifacts rather than copying them |
 | `skills/ux-review/` | Guides a non-technical reviewer through a structured UX review of a ticket/PR; a review harness that leaves project startup to the project |
+| `skills/context-builder/` | Scans a repo and drafts `AGENTS.md` (or folder `CLAUDE.md`) files; presents every draft for approval and never writes silently |
+| `skills/critical-reviewer/` | Adversarially interrogates a plan or spec via `AskUserQuestion`, severity-ordered, recommendation-first; hypothesis gate for bug-shaped input |
 | `agents/*.md` | `discovery`, `implementer`, `test-writer`, `reviewer` — least-privilege tool allowlists |
 | `hooks/` | Enforcement, safety, and observability hooks wired via `hooks/hooks.json` (see below) |
 | `lib/resolve-models.sh` | Hybrid tier→model resolver: live Anthropic Models API, falls back to `tiers.json` offline |
