@@ -41,7 +41,7 @@ Rule 5's sibling clause closes the version of that failure that only exists unde
 
 Rule 5's false-premise clause closes a fourth failure: a worker told to change something that isn't there quietly re-scopes onto the nearest thing that is, and the parent gets a plausible summary of work it never asked for. It checks the *dispatch* before work starts — it is not a re-check of the worker's own output, so the standing rule against self-verification instructions below DEEP tier is untouched.
 
-Rules 9 and 10 are structural backstops rather than quality rules: 9 keeps a fan-out from recursing into a runaway fleet, and 10 is the prompt-side half of the `credential-file-guard.py` hook — the hook blocks the read, this rule stops a worker that already has the contents from pasting them into its report.
+Rules 9 and 10 are structural backstops rather than quality rules: 9 keeps a fan-out from recursing into a runaway fleet, and 10 is the prompt-side half of the `pretooluse-guard.py` hook's credential-file check — the hook blocks the read, this rule stops a worker that already has the contents from pasting them into its report.
 
 ---
 Rule 5's false-premise clause derived in concept from Builder.io's skills repo, MIT.

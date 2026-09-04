@@ -26,19 +26,21 @@ docs: `references/background.md`.
 
 ## Session Start Protocol
 
-Run once at the start of each task-oriented session:
+Run once at the start of each task-oriented session — deliberately small, two steps, no more.
+The session-start trigger exists because purely event-driven observation was tried and never
+fired; the trigger stays, but it must not become a ritual that delays the user's task:
 
-1. **Files exist?** If `log.md` or `principles.md` is missing, create it from the templates in
-   this file (first-time setup).
-2. **Scan for context.** Read OPEN observations and active principles. Apply their insights to any
-   skill used this session even if the skill file hasn't been updated yet; don't surface them
-   unprompted unless directly relevant.
-3. **Review trigger.** If `skill-observations/last-review-date.txt` is missing or older than 7
+1. **Scan for context.** Read OPEN observations in `log.md` and active principles (create either
+   file from the templates in this file if missing — first-time setup only). Apply their insights
+   to any skill used this session even if the skill file hasn't been updated yet; don't surface
+   them unprompted unless directly relevant.
+2. **Review trigger.** If `skill-observations/last-review-date.txt` is missing or older than 7
    days AND no scheduled review is registered, run the comprehensive review before the user's task
    — full procedure in `references/weekly-review.md`.
-4. **Config check (once per session).** Confirm the config file (CLAUDE.md or equivalent) contains
-   a task-observer activation instruction; if not, briefly suggest adding one — details in
-   `references/activation-setup.md`.
+
+There is no per-session config check: activation setup (`references/activation-setup.md`) is a
+one-time install concern, consulted only when the skill visibly failed to fire in a previous
+session, never re-verified every session.
 
 On context compaction, the CLAUDE.md trigger re-invokes this skill in the resumed session;
 observations continue in the same log with continuous numbering.
