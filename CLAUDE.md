@@ -12,9 +12,11 @@ See [README.md](README.md) for install instructions and the plugin overview.
   model routing, and a vault-backed context store. Has its own README, docs, and test suite.
 - `SYSTEM_PROMPT.md` — mirror of `~/.claude/CLAUDE.md`. Not auto-loaded by Claude Code, so it
   is inert here; restore with `cp SYSTEM_PROMPT.md ~/.claude/CLAUDE.md`.
-- `skills/`, `agents/` — standalone assets kept outside the plugin. `agent-selector` and
-  `critical-reviewer` also exist inside `gpereira-harness/skills/`; the plugin copy is the
-  one that ships.
+- `skills/`, `agents/` — standalone assets kept outside the plugin. `agent-selector` also
+  exists inside `gpereira-harness/skills/`; the plugin copy is the one that ships.
+  `regression-check` lives here only — it is not in the plugin, so `~/.claude/skills/` is
+  its live location and this is the mirror. Keep the two in sync by hand, or the copies
+  drift silently.
 - `mcp.json` — MCP server definitions, kept out of the plugin by design so nothing personal
   is published. Merge into `~/.claude.json` by hand.
 - `.github/workflows/smoke.yml` — CI. Runs the plugin smoke test and leak gate on every push and PR.
