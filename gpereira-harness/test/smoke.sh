@@ -46,6 +46,13 @@ echo '{"tool_input":{"command":"x && rm -rf ~"}}' | python3 "$ROOT/hooks/bash-cl
   | jq -e '.hookSpecificOutput.permissionDecision=="deny"' >/dev/null || fail "bash-guard did not deny rm -rf ~"
 echo '{"tool_input":{"command":"ls -la"}}' | python3 "$ROOT/hooks/bash-clause-guard.py" \
   | grep -q . && fail "bash-guard should be silent on a safe command" || true
+# compose teardown: only the volume-deleting form is denied. Stopping containers
+# without -v is routine, so the silence case is the one that must not regress.
+echo '{"tool_input":{"command":"docker compose down -v"}}' | python3 "$ROOT/hooks/bash-clause-guard.py" \
+  | jq -e '.hookSpecificOutput.permissionDecision=="deny"' >/dev/null \
+  || fail "bash-guard did not deny compose down with volumes"
+echo '{"tool_input":{"command":"docker compose down"}}' | python3 "$ROOT/hooks/bash-clause-guard.py" \
+  | grep -q . && fail "bash-guard should be silent on compose down without volumes" || true
 
 # credential-file-guard: blocks credential reads across every content-returning tool,
 # including Grep (which is NOT covered by a Read|Edit|Write matcher yet prints file content).

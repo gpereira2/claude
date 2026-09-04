@@ -62,7 +62,14 @@ If the plugin directory cannot be resolved, stop and report — do not guess.
 
 8. **Record the run.** Write today's date to
    `~/.claude/skill-observations/last-plugin-sync.txt` so the next run knows its
-   window. If the file is absent, treat the window as the last 7 days.
+   window. If the file is absent, treat the window as the last 7 days. Capture
+   the write result — never discard it — then read the stamp back in a
+   **separate, sequenced call** and confirm it matches today, folding the
+   read-back into step 7's closing independent check. A silently-stale stamp
+   widens the next run's window and risks re-porting entries the plugin
+   already carries; this trap fired on 2026-08-19, when an unawaited stamp
+   write raced its same-script read-back and the file kept the previous run's
+   date (principles #2, #9).
 
 ## Report
 

@@ -205,6 +205,7 @@ Always produce the manifest and show it for confirmation before spawning anythin
 Rules:
 - Max 3 tasks per parallel group — beyond that, summary-merging overhead exceeds the parallelism gain.
 - Tasks in the same parallel group must have **disjoint write sets**. The worktree is per ticket, not per task, so two workers editing one file silently lose one set of edits — put overlapping writes in different groups. "No hidden dependencies" is about ordering and does not cover this.
+- A shared test database rebuilt per run (`migrate:fresh` or equivalent) is part of the write set. Two test tasks that both rebuild the same schema must not share a group even when their file edits are disjoint — the contention surfaces as spurious deadlocks on unrelated tests, and a test tool's DB isolation does not extend to ad-hoc migration commands a worker might run (principle #15).
 - Every task's dispatch prompt must embed the orchestrator's **delegation contract** (objective, return contract, tools/conventions, boundaries, context paths, verification commands, conduct) — see the `orchestrator` skill, Phase 4.
 - Every task returns the standard **Return Contract** — the one-line JSON schema in `references/spawn-examples.md`; artefacts to disk as paths, never inlined.
 - Every dispatch embeds the worker-conduct block from `references/worker-conduct.md` verbatim — the same block for every tier, plus the self-refutation rule for DEEP/FRONTIER only.
