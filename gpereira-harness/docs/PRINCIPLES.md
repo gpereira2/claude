@@ -32,6 +32,25 @@ silent ones. Close every bulk-edit batch with an independent verification.
 success and changed nothing, because BSD `sed` does not support `\b`. The test
 suite passed — because nothing had changed. Only an independent grep caught it.
 
+**Coverage corollary.** A document that names a trap in one step will be
+violated at the adjacent step that shares the trap's shape but lacks the guard.
+When you defend a hazard, sweep every step of the same shape — not only the step
+where the failure was first observed. `harness-sync` Step 5 named both
+write-race traps explicitly, while the record step of the routine that schedules
+it (`monday-harness-sync` Step 8) still prescribed a bare stamp write. On
+2026-08-19 the documented trap fired exactly there: an unawaited write raced its
+same-script read-back and `last-plugin-sync.txt` kept the previous run's date.
+That is not cosmetic — the next run reads that stamp to compute its window, so
+staleness widens the window and risks re-porting what the plugin already
+carries.
+
+*Seen once more on 2026-08-20:* the replacement stamp write was **rejected** by
+the write-gate, and the run learned this only because the result was captured
+rather than discarded. A run that collapsed it to `ok` would have reported a
+stamp it never wrote. *(From Observation 43, verified 2026-08-20; the
+`monday-harness-sync` Step 8 read-back requirement it argues for landed
+2026-09-03.)*
+
 ### 3. Search prior artefacts before dispatching discovery
 
 Before broad discovery, search your memory index and context store for prior
@@ -280,3 +299,52 @@ review: a production data fix narrowed to one correct statement against a
 read-only source and never applied, a guard-blocked config read that left its
 question unresolved, and three completed scheduled runs that failed only at
 delivery.)*
+
+### 19. The consumer's pin decides what runs, not the source tree
+
+Verifying the artefact you edited is not verifying the artefact that runs. Where
+a consumer resolves content through its own pin — an install manifest, a
+lockfile, a cached build, a pinned image digest — **the pin is the authority**,
+and a clean test run against the source tree says nothing about what is
+deployed. This is distinct from #2, which is about a write that silently did not
+land: here the write succeeds perfectly, into a lineage nothing reads.
+
+The shape that makes it durable is that every signal looks healthy. This
+harness pins itself in `~/.claude/plugins/installed_plugins.json` by `version`
+and `gitCommitSha`; on 2026-09-04 that pin still read 1.4.0 / `339eca0` — a
+feature branch's HEAD, last written 2026-08-12 — while the integration line had
+advanced to 1.7.0. Three minor versions of content were inert in every live
+session, including principles #14–#18 and a merged safety guard. The smoke
+tests passed. `git diff --stat` showed the ports. Both were true of a lineage
+the running session never loaded, and nothing short of reading the install
+manifest would have said so.
+
+So any sync or verify step must read the pin and report the delta, not just its
+own diff. On divergence, say plainly that the ported changes are **not live**
+and name the remediation rather than implying the work has landed. A marketplace
+whose source is a directory tracks whatever branch that checkout has out, which
+makes "which branch is the source repo on" a deployment question, not a
+housekeeping one. *(From Observation 56, verified 2026-09-04.)*
+
+### 20. Recommendation-first questioning converges; opinion elicitation requires withholding it
+
+Leading every question with a recommended answer is the right lever when the
+goal is to close gaps in a plan — it turns each question into a cheap
+confirmation and drives convergence. It is the **wrong** lever when the
+deliverable must represent the *user's own* view: a comment, a vote, an RFC
+reply, a review they will sign. There, the recommendation anchors them, and
+what comes back is the agent's framing ratified rather than the user's position
+articulated. The failure is quiet — the output looks like a well-formed opinion,
+so nothing signals that the wrong person authored it.
+
+Choose the mode by asking **whose view the deliverable must represent.** When it
+is the user's: offer plausible positions with no `(Recommended)` tag, prefer
+multi-select over single-choice, and hold counter-arguments until *after* the
+user commits to a view — pressure-test the stated position instead of pre-empting
+it. When it is the plan's correctness: recommend first, as normal.
+
+*(From the 2026-08-19 RFC-comment session, Observation 44. The user noticed the
+first grilling pass had captured agent-recommended positions rather than their
+own and asked for an interview pass explicitly. Drafted for this lineage as #16
+on 2026-08-20 and staged pending sync; that number was taken in the interim, so
+it lands here as #20.)*

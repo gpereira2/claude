@@ -76,6 +76,7 @@ Wait for confirmation or correction, then proceed to questioning.
 6. **Drill down.** Start broad, escalate specificity as rounds progress. Resolve dependencies one branch at a time before crossing to a new branch.
 7. **Track progress.** After every 3 rounds, give a one-line status: `Progress: 2 resolved, 4 open (1 🔴, 2 🟡, 1 🟢)`.
 8. **Terminate cleanly.** Stop when no 🔴 or 🟡 remain, or after 12 rounds. Declare **"Grilling complete"** with a summary of what was clarified and any unresolved 🟢 items.
+9. **Verify named dependencies before questioning the design.** Runs with rule 1, not after rule 8: a plan that names an external package, a version constraint, or an interface it will bind makes *verifiable claims*, not design choices. Check them against the registry the project actually resolves from — `composer show -a <pkg>`, `npm view <pkg> versions`, or the tagged tree via the host's API — and confirm the **tagged** tree contains the named symbol, not the package's main branch. A mismatch is 🔴 ahead of every design question, because it blocks the ticket regardless of how good the design is. *(From Observation 58, verified 2026-09-04: a ticket required an internal package at `^0.1` and bound an interface from it; the only tagged release predated that interface by 32 commits, and the surface existed only on main. Two read-only calls would have caught it — neither was made until after a worktree had been created.)*
 
 ## Question format
 

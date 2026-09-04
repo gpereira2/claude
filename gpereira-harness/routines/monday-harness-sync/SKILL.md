@@ -17,6 +17,31 @@ week of drift makes the classification ambiguous.
 - **Live harness:** `~/.claude` — skills, agents, hooks, commands.
 - **Plugin:** `$CLAUDE_HARNESS_PLUGIN_DIR`, falling back to the plugin root that
   contains this routine. Resolve it once and report which path you used.
+  **Resolve by branch as well as by path.** Confirm the resolved copy is on the
+  integration line — compare `git -C <plugin> rev-parse --abbrev-ref HEAD` and
+  its `plugin.json` version against the default branch — and if it is not,
+  classify against a checkout that is, reporting the deviation. A path is not a
+  version: on 2026-09-02 the configured path resolved to a feature branch three
+  minor versions behind `main` and carrying another run's uncommitted WIP. A
+  sync applied there would have classified every difference against a superseded
+  lineage and landed its ports on a hook structure the shipping line no longer
+  has.
+  **Also check what is installed, not just what is checked out.** The live
+  harness is served from the plugin cache, pinned in
+  `~/.claude/plugins/installed_plugins.json` by `version` and `gitCommitSha`. A
+  clean smoke run and a satisfying `diff --stat` in the resolved checkout say
+  nothing about what the running session loads. Compare the pin against the
+  resolved plugin's version and HEAD, and report the delta: on 2026-09-03 the
+  pin was 1.4.0 / `339eca0` while the integration line was 1.7.0, so three minor
+  versions — and every port from six prior runs — were inert live.
+  **Enumerate sibling worktrees before porting anything.** Run `git -C <plugin>
+  worktree list` and `git -C <each> status --porcelain`, and read the diff of
+  any that is dirty. Because this routine never commits, prior runs' ports sit
+  uncommitted in the worktree that produced them, invisible to both the
+  committed integration line and the Friday review — so a port already made can
+  read as still missing and be derived again. On 2026-09-04 four trees carried
+  overlapping, never-merged versions of the same hunks. Consolidate onto one
+  tree and name the superseded ones in the report.
 - **Observation log:** `~/.claude/skill-observations/log.md`, with cross-cutting
   principles in `principles.md` alongside it.
 
@@ -59,10 +84,25 @@ If the plugin directory cannot be resolved, stop and report — do not guess.
    behavioural guard checks) and any hook self-tests. Then close the batch with
    an **independent** check — `git -C <plugin> diff --stat` and a grep for a new
    sentinel string — rather than trusting the edit results (principles #2, #9).
+   Make the independent check itself absolute-path-based: a `cd` issued inside one
+   shell call can persist into later calls in the same session, so a relative-path
+   sentinel grep silently resolves against the wrong directory and reads as "the
+   edit never landed". That fired on 2026-09-02 — `diff --stat` showed both
+   hunks while the relative greps returned nothing. A broken verification is
+   worse than none, because it argues for re-applying work already done.
+   The sentinel check must also be **two-sided**, per harness-sync Step 5: prove
+   the string matches where it should before reading a zero elsewhere as clean.
 
 8. **Record the run.** Write today's date to
    `~/.claude/skill-observations/last-plugin-sync.txt` so the next run knows its
-   window. If the file is absent, treat the window as the last 7 days.
+   window. If the file is absent, treat the window as the last 7 days. Capture
+   the write result — never discard it — then read the stamp back in a
+   **separate, sequenced call** and confirm it matches today, folding the
+   read-back into step 7's closing independent check. A silently-stale stamp
+   widens the next run's window and risks re-porting entries the plugin
+   already carries; this trap fired on 2026-08-19, when an unawaited stamp
+   write raced its same-script read-back and the file kept the previous run's
+   date (principles #2, #9).
 
 ## Report
 
