@@ -1,16 +1,26 @@
 ---
 name: monday-harness-sync
-description: Weekly Monday sync between the live user-level harness and the portable plugin — picks up whatever the Friday task-observer review changed and propagates it per-hunk. Register as a scheduled routine (see docs/ROUTINES.md); not auto-loaded as a session skill.
+description: Weekly sync between the live user-level harness and the portable plugin — picks up whatever the task-observer review has applied since the last sync and propagates it per-hunk. Register as a scheduled routine (see docs/ROUTINES.md); not auto-loaded as a session skill.
 ---
 
 Reconcile the live user-level harness with the portable plugin copy. This is a
 standalone run with **no prior conversation context**, so every step is explicit.
 
-**Why Monday.** The `weekly-skill-observation-review` routine runs Friday and
-edits skills under `~/.claude/` in place. Those edits are the week's real
-learnings, and they land only on the live side. Monday picks them up while the
-reasoning is still recoverable from the observation log, and before a second
-week of drift makes the classification ambiguous.
+**The ordering matters, the day does not.** The
+`weekly-skill-observation-review` routine edits skills under `~/.claude/` in
+place; those edits are the real learnings and they land only on the live side.
+This routine picks them up while the reasoning is still recoverable from the
+observation log, and before a second cycle of drift makes the classification
+ambiguous.
+
+Two constraints bind the registration, and neither is a calendar day. The review
+must run **before** the sync that consumes its output, and the two must never
+fire in the same window — a sync that overlaps the review races the review's own
+writes. The review may run far more often than the sync; **daily review, weekly
+sync is the recommended pairing**, because the review is cheap and keeps the live
+side fresh while the sync is expensive (git, worktrees, smoke tests, a PR) and
+batches better. The sync's window is everything since `last-plugin-sync.txt`, so
+it correctly spans however many review runs have happened in between.
 
 ## Directories
 
@@ -85,9 +95,22 @@ If the plugin directory cannot be resolved, stop and report — do not guess.
    it to `~/.claude/skill-updates/YYYY-MM-DD/plugin-sync/` with a one-line note
    on what it would change and why it needs a human.
 
-5. **Never delete, never commit, never push.** Leave the plugin working tree
-   dirty for review. Deletions and anything previously held back by the user are
-   reported as decisions with a recommendation, not actioned.
+5. **Never delete. Land the run on its own branch, never on the default one.**
+   Finish by committing what you applied to a branch named `sync/YYYY-MM-DD` and
+   opening one PR against the default branch. Never commit to the default branch,
+   never force-push, never merge — the PR is the human gate. Deletions and
+   anything previously held back by the user are reported as decisions with a
+   recommendation, not actioned.
+
+   *This rule said the opposite until 2026-09-04,* and the inversion is worth
+   keeping visible: it read "never commit, never push — leave the plugin working
+   tree dirty for review". That sounds like the safe posture and is not. Because
+   nothing ever committed, six consecutive runs' ports sat uncommitted in four
+   separate worktrees — invisible to the committed integration line, and to the
+   review that reads it — so the same hunks were re-derived from scratch each
+   run while every check honestly reported them missing. An unattended run that
+   cannot land its output has not been made safe, only silent. A branch and a PR
+   keep the gate while making the work visible.
 
 6. **Carry the reasoning.** Per harness-sync Step 4, each ported item records the
    failure that motivated it, the date verified, and what was deliberately left
@@ -134,6 +157,9 @@ needs no manufactured changes.
 
 ## Bounds
 
-Read-mostly. This routine edits only files under `~/.claude/` and the resolved
-plugin directory, and touches no project repository. It runs unattended, so when
-a judgement call is genuinely close, stage it and report rather than deciding.
+Additive-only. This routine edits files under `~/.claude/` and the resolved
+plugin directory, commits to a dedicated `sync/YYYY-MM-DD` branch in the plugin's
+own repository, and opens one PR. It never writes to the default branch, never
+merges, never force-pushes, and touches no other project repository. It runs
+unattended, so when a judgement call is genuinely close, stage it and report
+rather than deciding.
