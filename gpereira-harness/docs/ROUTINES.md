@@ -19,13 +19,22 @@ runs until you schedule it.
 | Routine | What it does | Depends on |
 |---|---|---|
 | `weekly-skill-observation-review` | Runs the `task-observer` weekly review — consolidates OPEN skill observations into skill updates | the bundled `task-observer` skill |
-| `monday-harness-sync` | Propagates the week's learnings between the live `~/.claude` harness and this plugin, per-hunk. Applies only additive changes; stages the rest | `routines/harness-sync/SKILL.md`, `git` |
+| `monday-harness-sync` | Propagates accumulated learnings between the live `~/.claude` harness and this plugin, per-hunk. Applies only additive changes, stages the rest, and lands the run on a `sync/YYYY-MM-DD` branch with one PR | `routines/harness-sync/SKILL.md`, `git`, `gh` |
 | `worktree-status` | Read-only git worktree hygiene report — active worktrees, merged/closed-PR reap candidates, prunable/orphaned branches | `git`, `gh` (no Docker) |
 
-> **Pair the two weekly routines in order.** `weekly-skill-observation-review`
-> runs Friday and edits the live side in place; `monday-harness-sync` then
-> propagates those edits to the plugin. Reversing the order syncs a stale live
-> harness, and running them the same day races the review's own writes.
+> **Pair the two routines by order, not by day.** `weekly-skill-observation-review`
+> edits the live side in place; `monday-harness-sync` then propagates those edits
+> to the plugin. Two constraints bind any registration: the review must run
+> **before** the sync that consumes its output, and the two must never fire in the
+> same window, or the sync races the review's own writes.
+>
+> The review may run far more often than the sync. **Daily review, weekly sync is
+> the recommended pairing** — the review is cheap and keeps the live side fresh,
+> while the sync is expensive (git, worktrees, smoke tests, a PR) and batches
+> better. The sync's window is everything since `last-plugin-sync.txt`, so it
+> spans however many review runs happened in between. Registering the sync daily
+> makes it re-scan the same entries every morning; that is how six consecutive
+> runs re-derived the same ports from scratch.
 
 Machine- or workspace-specific routines (control-board checks, regression sweeps,
 Docker/worktree pruning, anything that DMs a chat workspace) are intentionally
@@ -39,13 +48,15 @@ scheduler your Claude Code setup uses — for example the `schedule` skill, a
 `scheduled-tasks/` entry, or a cron job that invokes `claude -p`:
 
 ```bash
-# Example: a weekly cron entry (Fridays 09:00) running the shipped routine.
-# Point the prompt at the routine skill body so the scheduled session follows it.
-# Friday, not Monday: monday-harness-sync consumes what this run leaves behind,
-# and the pairing note above warns that sharing a day races the review's writes.
-0 9 * * 5  claude -p "Follow the weekly-skill-observation-review routine in the \
+# The recommended pairing: review daily, sync weekly, never in the same window.
+# Point each prompt at the routine skill body so the scheduled session follows it.
+0 5 * * *  claude -p "Follow the weekly-skill-observation-review routine in the \
   gpereira-harness plugin (routines/weekly-skill-observation-review/SKILL.md) exactly." \
-  >> "$HOME/.claude/logs/weekly-skill-review.log" 2>&1
+  >> "$HOME/.claude/logs/skill-review.log" 2>&1
+
+0 9 * * 1  claude -p "Follow the monday-harness-sync routine in the \
+  gpereira-harness plugin (routines/monday-harness-sync/SKILL.md) exactly." \
+  >> "$HOME/.claude/logs/harness-sync.log" 2>&1
 ```
 
 Adapt the schedule and invocation to your environment. Keep routine **state**
