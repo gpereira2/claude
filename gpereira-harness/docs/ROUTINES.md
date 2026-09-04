@@ -39,9 +39,11 @@ scheduler your Claude Code setup uses — for example the `schedule` skill, a
 `scheduled-tasks/` entry, or a cron job that invokes `claude -p`:
 
 ```bash
-# Example: a weekly cron entry (Mondays 09:00) running the shipped routine.
+# Example: a weekly cron entry (Fridays 09:00) running the shipped routine.
 # Point the prompt at the routine skill body so the scheduled session follows it.
-0 9 * * 1  claude -p "Follow the weekly-skill-observation-review routine in the \
+# Friday, not Monday: monday-harness-sync consumes what this run leaves behind,
+# and the pairing note above warns that sharing a day races the review's writes.
+0 9 * * 5  claude -p "Follow the weekly-skill-observation-review routine in the \
   gpereira-harness plugin (routines/weekly-skill-observation-review/SKILL.md) exactly." \
   >> "$HOME/.claude/logs/weekly-skill-review.log" 2>&1
 ```

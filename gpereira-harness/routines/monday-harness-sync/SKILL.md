@@ -53,11 +53,25 @@ If the plugin directory cannot be resolved, stop and report — do not guess.
    file is the authority on how to reconcile; this routine only schedules it and
    bounds what may be changed unattended. Do not re-derive the method.
 
-2. **Read the week's observations first.** Everything in the log marked ACTIONED
-   since the previous Monday run is the candidate set — those are the entries the
-   Friday review applied to the live side. An ACTIONED observation whose change
-   is missing from the plugin is a `live → plugin` candidate; the log entry is
-   also where the *reasoning* comes from, which the port must carry.
+2. **Read the week's observations first.** The candidate set is **two** buckets,
+   not one:
+
+   - Everything marked ACTIONED since the previous Monday run — the entries the
+     Friday review applied to the live side. An ACTIONED observation whose change
+     is missing from the plugin is a `live → plugin` candidate.
+   - Everything left OPEN and tagged with the literal token `DEFERRED-TO-SYNC`.
+     Grep the log for that token.
+
+   The second bucket is not an edge case, it is the routine's main input. The
+   Friday review refuses to edit plugin-shipped skills by design and parks them
+   here, so those entries are *never* marked ACTIONED — a candidate set defined
+   by ACTIONED alone selects none of them and the routine silently no-ops on the
+   work it exists to do. That gap left observations 56–59 unported across six
+   consecutive runs, each one honestly re-verifying the same finding as still
+   missing, because the check was true every time. *(Verified 2026-09-04.)*
+
+   In both buckets the log entry is also where the *reasoning* comes from, which
+   the port must carry.
 
 3. **Classify every difference** into `live → plugin`, `plugin → live`, or
    stays-private, per harness-sync Step 1. Never bulk-copy in either direction:
