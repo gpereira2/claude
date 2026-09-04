@@ -91,8 +91,16 @@ If the discovery generalises beyond the one file, add it to
 
 ```bash
 bash test/smoke.sh          # sanity + leak gate + behavioural guard checks
+for f in <abs plugin root>/hooks/*.test.py; do python3 "$f"; done
 git -C <plugin root> diff --stat
 ```
+
+**Glob the hook self-tests; never name one by filename.** The guards get merged
+and renamed, so a hard-coded path rots into a step that runs nothing and reports
+success. `credential-file-guard.test.py` became `pretooluse-guard.test.py` when
+three guards merged into one spawn, and on 2026-09-02 a verification step was
+still pointing at the dead path. A glob that matches zero files is itself a
+finding — say so rather than passing. *(Verified 2026-09-04.)*
 
 Per `docs/PRINCIPLES.md` #2, close the batch with an **independent** check — a
 grep for the new sentinel, a `git diff --stat` — rather than trusting the edit
@@ -102,6 +110,22 @@ results. Two traps that have both fired here before:
   nothing, and a test suite will pass *because* nothing changed. Use `perl -pi`.
 - Concurrent unawaited shell calls race the write they are meant to verify
   (principle #9). Force sequencing when a read must follow a write.
+- A sentinel grep is only evidence once it has been shown to match *somewhere*.
+  Make the check **two-sided**: assert the sentinel is present where it should
+  be before concluding it is absent where it should not be. On 2026-08-26 a
+  sentinel lifted from a bolded phrase matched zero on both sides — and the
+  plugin-side zero read as the desired "nothing was applied" result, so a run
+  that greped only the side expected to be empty would have recorded a false
+  PASS on a search string that could not have matched anything anywhere. A
+  sentinel that matches nowhere is a broken search, not a clean result. Pick it
+  from running prose — no Markdown emphasis, no path separators, nothing a
+  formatter may rewrite. A run that applies nothing needs this positive control
+  most, because its "absent" assertion is otherwise untestable (principle #13).
+- Read a file through the **file-reading tool** before writing it. A write whose
+  only prior read went through a shell `cat` is rejected by the write-gate, and
+  the rejection lands at the end of the run on the stamp write — the one write
+  whose silent loss corrupts the next run's window. Shell inspection is not a
+  read for this purpose. *(Verified 2026-09-04.)*
 
 Report what moved, what was deliberately left private, and what is still
 undecided. Never present a sync as complete while a bucket is unresolved.
